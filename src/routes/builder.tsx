@@ -182,28 +182,48 @@ function BuilderPage() {
             </Section>
 
             <Section title="Template">
-              <div className="grid grid-cols-3 gap-2">
-                {(Object.keys(TEMPLATE_PRESETS) as TemplatePreset[]).map((t) => {
-                  const preset = TEMPLATE_PRESETS[t];
-                  const active = template === t;
-                  return (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setTemplate(t)}
-                      className={cn(
-                        "rounded-md border p-3 text-left transition-colors",
-                        active
-                          ? "border-primary bg-primary/10"
-                          : "border-border hover:border-primary/40",
-                      )}
-                    >
-                      <p className="text-sm font-semibold">{preset.label}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{preset.description}</p>
-                    </button>
-                  );
-                })}
-              </div>
+              {(["ATS-safe", "Graphical"] as const).map((cat) => {
+                const items = (Object.keys(TEMPLATE_PRESETS) as TemplatePreset[]).filter(
+                  (t) => TEMPLATE_PRESETS[t].category === cat,
+                );
+                return (
+                  <div key={cat} className="mb-3 last:mb-0">
+                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {cat}
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {items.map((t) => {
+                        const preset = TEMPLATE_PRESETS[t];
+                        const active = template === t;
+                        return (
+                          <button
+                            key={t}
+                            type="button"
+                            onClick={() => setTemplate(t)}
+                            className={cn(
+                              "rounded-md border p-3 text-left transition-colors",
+                              active
+                                ? "border-primary bg-primary/10"
+                                : "border-border hover:border-primary/40",
+                            )}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="inline-block size-3 rounded-sm border border-border"
+                                style={{ backgroundColor: preset.accent }}
+                              />
+                              <p className="text-sm font-semibold">{preset.label}</p>
+                            </div>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {preset.description}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
             </Section>
 
             <Section
