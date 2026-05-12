@@ -589,3 +589,24 @@ function RepeaterCard({
     </div>
   );
 }
+
+function AtsMeter({ score }: { score: number }) {
+  const tone =
+    score >= 75 ? "text-success" : score >= 50 ? "text-warning" : "text-destructive";
+  const barTone =
+    score >= 75 ? "bg-success" : score >= 50 ? "bg-warning" : "bg-destructive";
+  return (
+    <div className="space-y-2">
+      <div className="flex items-baseline justify-between">
+        <span className={cn("text-3xl font-bold", tone)}>{score}</span>
+        <span className="text-xs text-muted-foreground">/ 100 ATS</span>
+      </div>
+      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+        <div
+          className={cn("h-full transition-all duration-500", barTone)}
+          style={{ width: `${score}%` }}
+        />
+      </div>
+    </div>
+  );
+}
