@@ -48,6 +48,7 @@ const empty: RewrittenResume = {
   education: [],
   certifications: [],
   achievements: [],
+  customSections: [],
 };
 
 const splitCsv = (s: string) =>
@@ -87,6 +88,30 @@ function BuilderPage() {
     update("projects", [...r.projects, { name: "", stack: "", link: "", bullets: [] }]);
   const addEdu = () =>
     update("education", [...r.education, { institution: "", degree: "", dates: "", score: "" }]);
+
+  const customSections = r.customSections ?? [];
+  const setCustomSections = (v: NonNullable<RewrittenResume["customSections"]>) =>
+    setR((p) => ({ ...p, customSections: v }));
+  const addCustomSection = () =>
+    setCustomSections([
+      ...customSections,
+      {
+        id: `cs_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        title: "New Section",
+        fields: [],
+        bullets: [],
+      },
+    ]);
+  const updateCustomSection = (
+    i: number,
+    patch: Partial<NonNullable<RewrittenResume["customSections"]>[number]>,
+  ) => {
+    const next = [...customSections];
+    next[i] = { ...next[i], ...patch };
+    setCustomSections(next);
+  };
+  const removeCustomSection = (i: number) =>
+    setCustomSections(customSections.filter((_, idx) => idx !== i));
 
   const canPreview = r.name.trim().length > 0;
 
@@ -522,6 +547,90 @@ function BuilderPage() {
                   onBlur={(e) => update("achievements", splitLines(e.target.value))}
                 />
               </Field>
+            </Section>
+
+            <Section
+              title="Custom Sections"
+              action={
+                <Button size="sm" variant="outline" onClick={addCustomSection}>
+                  <Plus className="mr-1 size-3" /> Add section
+                </Button>
+              }
+            >
+              {customSections.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Add your own sections (e.g. Volunteering, Publications, Languages, Hobbies). You control the title, the fields, and the bullets.
+                </p>
+              )}
+              {customSections.map((sec, i) => (
+                <RepeaterCard key={sec.id} onRemove={() => removeCustomSection(i)}>
+                  <Field label="Section title">
+                    <Input
+                      value={sec.title}
+                      onChange={(e) => updateCustomSection(i, { title: e.target.value })}
+                      placeholder="e.g. Volunteering"
+                    />
+                  </Field>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs text-muted-foreground">Fields (label : value)</Label>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() =>
+                          updateCustomSection(i, {
+                            fields: [...sec.fields, { label: "", value: "" }],
+                          })
+                        }
+                      >
+                        <Plus className="mr-1 size-3" /> Field
+                      </Button>
+                    </div>
+                    {sec.fields.map((f, fi) => (
+                      <div key={fi} className="grid grid-cols-[1fr_2fr_auto] gap-2">
+                        <Input
+                          placeholder="Label"
+                          value={f.label}
+                          onChange={(e) => {
+                            const fields = [...sec.fields];
+                            fields[fi] = { ...f, label: e.target.value };
+                            updateCustomSection(i, { fields });
+                          }}
+                        />
+                        <Input
+                          placeholder="Value"
+                          value={f.value}
+                          onChange={(e) => {
+                            const fields = [...sec.fields];
+                            fields[fi] = { ...f, value: e.target.value };
+                            updateCustomSection(i, { fields });
+                          }}
+                        />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() =>
+                            updateCustomSection(i, {
+                              fields: sec.fields.filter((_, idx) => idx !== fi),
+                            })
+                          }
+                        >
+                          <Trash2 className="size-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <Field label="Bullets (one per line)">
+                    <Textarea
+                      rows={3}
+                      defaultValue={sec.bullets.join("\n")}
+                      onBlur={(e) =>
+                        updateCustomSection(i, { bullets: splitLines(e.target.value) })
+                      }
+                    />
+                  </Field>
+                </RepeaterCard>
+              ))}
             </Section>
 
             <Button
