@@ -123,6 +123,21 @@ function ResumeDoc({ r, template = "fresher" }: { r: RewrittenResume; template?:
   const order = meta.sectionOrder;
   const sidebarSections = new Set(meta.sidebarSections ?? []);
 
+  const customBlocks = (r.customSections ?? [])
+    .filter((sec) => sec.title.trim() || sec.fields.length || sec.bullets.length)
+    .map((sec) => (
+      <View key={sec.id}>
+        <Text style={s.sectionTitle}>{sec.title || "Section"}</Text>
+        {sec.fields.map((f, i) => (
+          <View key={i} style={s.skillRow}>
+            {f.label ? <Text style={s.skillLabel}>{f.label}:</Text> : null}
+            <Text style={s.skillVals}>{f.value}</Text>
+          </View>
+        ))}
+        {sec.bullets.length > 0 ? <Bullets items={sec.bullets} s={s} /> : null}
+      </View>
+    ));
+
   const blocks: Record<string, React.ReactNode> = {
     summary: r.summary ? (
       <View key="summary">
@@ -267,6 +282,7 @@ function ResumeDoc({ r, template = "fresher" }: { r: RewrittenResume; template?:
             </View>
             <View style={s.mainCol}>
               {order.filter((id) => !sidebarSections.has(id)).map((id) => blocks[id])}
+              {customBlocks}
             </View>
           </View>
         </Page>
@@ -295,7 +311,10 @@ function ResumeDoc({ r, template = "fresher" }: { r: RewrittenResume; template?:
               ))}
             </Text>
           </View>
-          <View style={s.bandBody}>{order.map((id) => blocks[id])}</View>
+          <View style={s.bandBody}>
+            {order.map((id) => blocks[id])}
+            {customBlocks}
+          </View>
         </Page>
       </Document>
     );
@@ -321,6 +340,7 @@ function ResumeDoc({ r, template = "fresher" }: { r: RewrittenResume; template?:
         </Text>
         <View style={s.hr} />
         {order.map((id) => blocks[id])}
+        {customBlocks}
       </Page>
     </Document>
   );
