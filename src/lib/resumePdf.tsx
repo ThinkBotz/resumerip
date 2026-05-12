@@ -404,6 +404,15 @@ export function resumeToPlainText(r: RewrittenResume): string {
     r.achievements.forEach((a) => lines.push(`  • ${a}`));
     lines.push("");
   }
+  for (const sec of r.customSections ?? []) {
+    if (!sec.title.trim() && !sec.fields.length && !sec.bullets.length) continue;
+    lines.push((sec.title || "SECTION").toUpperCase());
+    for (const f of sec.fields) {
+      lines.push(`${f.label ? `${f.label}: ` : ""}${f.value}`);
+    }
+    sec.bullets.forEach((b) => lines.push(`  • ${b}`));
+    lines.push("");
+  }
   return lines.join("\n");
 }
 
