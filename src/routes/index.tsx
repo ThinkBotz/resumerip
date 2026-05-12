@@ -31,6 +31,7 @@ function Index() {
   const analyzeFn = useServerFn(analyzeResume);
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null);
+  const [resumeText, setResumeText] = useState<string>("");
 
   const handleFile = async (file: File) => {
     setLoading(true);
@@ -41,6 +42,7 @@ function Index() {
         setLoading(false);
         return;
       }
+      setResumeText(text);
       const result = await analyzeFn({ data: { resumeText: text } });
       if (!result.ok) {
         toast.error(result.error);
@@ -75,7 +77,11 @@ function Index() {
       </header>
 
       {analysis ? (
-        <ResultsView analysis={analysis} onReset={() => setAnalysis(null)} />
+        <ResultsView
+          analysis={analysis}
+          resumeText={resumeText}
+          onReset={() => setAnalysis(null)}
+        />
       ) : (
         <main className="mx-auto flex w-full max-w-4xl flex-col items-center px-4 pb-24 pt-12 text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs uppercase tracking-widest text-primary">
