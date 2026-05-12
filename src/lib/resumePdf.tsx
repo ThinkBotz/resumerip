@@ -1,5 +1,6 @@
 import { Document, Page, Text, View, StyleSheet, pdf, Link } from "@react-pdf/renderer";
 import type { RewrittenResume } from "./rewrite.functions";
+import { TEMPLATE_PRESETS, type TemplatePreset } from "./atsScore";
 
 const styles = StyleSheet.create({
   page: {
@@ -64,7 +65,7 @@ function Bullets({ items }: { items: string[] }) {
   );
 }
 
-function ResumeDoc({ r }: { r: RewrittenResume }) {
+function ResumeDoc({ r, template = "fresher" }: { r: RewrittenResume; template?: TemplatePreset }) {
   const links = joinLinks(r.contact);
   const hasSkills =
     r.skills.languages.length +
@@ -72,6 +73,111 @@ function ResumeDoc({ r }: { r: RewrittenResume }) {
       r.skills.tools.length +
       r.skills.concepts.length >
     0;
+  const order = TEMPLATE_PRESETS[template].sectionOrder;
+
+  const blocks: Record<string, React.ReactNode> = {
+    summary: r.summary ? (
+      <View key="summary">
+        <Text style={styles.sectionTitle}>Summary</Text>
+        <Text>{r.summary}</Text>
+      </View>
+    ) : null,
+    skills: hasSkills ? (
+      <View key="skills">
+        <Text style={styles.sectionTitle}>Skills</Text>
+        {r.skills.languages.length > 0 && (
+          <View style={styles.skillRow}>
+            <Text style={styles.skillLabel}>Languages:</Text>
+            <Text style={styles.skillVals}>{r.skills.languages.join(", ")}</Text>
+          </View>
+        )}
+        {r.skills.frameworks.length > 0 && (
+          <View style={styles.skillRow}>
+            <Text style={styles.skillLabel}>Frameworks:</Text>
+            <Text style={styles.skillVals}>{r.skills.frameworks.join(", ")}</Text>
+          </View>
+        )}
+        {r.skills.tools.length > 0 && (
+          <View style={styles.skillRow}>
+            <Text style={styles.skillLabel}>Tools:</Text>
+            <Text style={styles.skillVals}>{r.skills.tools.join(", ")}</Text>
+          </View>
+        )}
+        {r.skills.concepts.length > 0 && (
+          <View style={styles.skillRow}>
+            <Text style={styles.skillLabel}>Concepts:</Text>
+            <Text style={styles.skillVals}>{r.skills.concepts.join(", ")}</Text>
+          </View>
+        )}
+      </View>
+    ) : null,
+    experience: r.experience.length > 0 ? (
+      <View key="experience">
+        <Text style={styles.sectionTitle}>Experience</Text>
+        {r.experience.map((e, i) => (
+          <View key={i} wrap={false}>
+            <View style={styles.itemHeaderRow}>
+              <Text style={styles.itemTitle}>
+                {e.role}
+                {e.company ? ` — ${e.company}` : ""}
+              </Text>
+              <Text style={styles.itemDates}>{e.dates}</Text>
+            </View>
+            {e.location ? <Text style={styles.itemSub}>{e.location}</Text> : null}
+            <Bullets items={e.bullets} />
+          </View>
+        ))}
+      </View>
+    ) : null,
+    projects: r.projects.length > 0 ? (
+      <View key="projects">
+        <Text style={styles.sectionTitle}>Projects</Text>
+        {r.projects.map((p, i) => (
+          <View key={i} wrap={false}>
+            <View style={styles.itemHeaderRow}>
+              <Text style={styles.itemTitle}>{p.name}</Text>
+              {p.link ? (
+                <Link src={p.link} style={[styles.itemDates, styles.link]}>
+                  {p.link}
+                </Link>
+              ) : null}
+            </View>
+            {p.stack ? <Text style={styles.itemSub}>{p.stack}</Text> : null}
+            <Bullets items={p.bullets} />
+          </View>
+        ))}
+      </View>
+    ) : null,
+    education: r.education.length > 0 ? (
+      <View key="education">
+        <Text style={styles.sectionTitle}>Education</Text>
+        {r.education.map((ed, i) => (
+          <View key={i} wrap={false}>
+            <View style={styles.itemHeaderRow}>
+              <Text style={styles.itemTitle}>{ed.institution}</Text>
+              <Text style={styles.itemDates}>{ed.dates}</Text>
+            </View>
+            <Text style={styles.itemSub}>
+              {ed.degree}
+              {ed.score ? `  •  ${ed.score}` : ""}
+            </Text>
+          </View>
+        ))}
+      </View>
+    ) : null,
+    certifications: r.certifications.length > 0 ? (
+      <View key="certifications">
+        <Text style={styles.sectionTitle}>Certifications</Text>
+        <Bullets items={r.certifications} />
+      </View>
+    ) : null,
+    achievements: r.achievements.length > 0 ? (
+      <View key="achievements">
+        <Text style={styles.sectionTitle}>Achievements</Text>
+        <Bullets items={r.achievements} />
+      </View>
+    ) : null,
+  };
 
   return (
     <Document>
@@ -92,113 +198,7 @@ function ResumeDoc({ r }: { r: RewrittenResume }) {
         </Text>
         <View style={styles.hr} />
 
-        {r.summary ? (
-          <View>
-            <Text style={styles.sectionTitle}>Summary</Text>
-            <Text>{r.summary}</Text>
-          </View>
-        ) : null}
-
-        {hasSkills ? (
-          <View>
-            <Text style={styles.sectionTitle}>Skills</Text>
-            {r.skills.languages.length > 0 && (
-              <View style={styles.skillRow}>
-                <Text style={styles.skillLabel}>Languages:</Text>
-                <Text style={styles.skillVals}>{r.skills.languages.join(", ")}</Text>
-              </View>
-            )}
-            {r.skills.frameworks.length > 0 && (
-              <View style={styles.skillRow}>
-                <Text style={styles.skillLabel}>Frameworks:</Text>
-                <Text style={styles.skillVals}>{r.skills.frameworks.join(", ")}</Text>
-              </View>
-            )}
-            {r.skills.tools.length > 0 && (
-              <View style={styles.skillRow}>
-                <Text style={styles.skillLabel}>Tools:</Text>
-                <Text style={styles.skillVals}>{r.skills.tools.join(", ")}</Text>
-              </View>
-            )}
-            {r.skills.concepts.length > 0 && (
-              <View style={styles.skillRow}>
-                <Text style={styles.skillLabel}>Concepts:</Text>
-                <Text style={styles.skillVals}>{r.skills.concepts.join(", ")}</Text>
-              </View>
-            )}
-          </View>
-        ) : null}
-
-        {r.experience.length > 0 && (
-          <View>
-            <Text style={styles.sectionTitle}>Experience</Text>
-            {r.experience.map((e, i) => (
-              <View key={i} wrap={false}>
-                <View style={styles.itemHeaderRow}>
-                  <Text style={styles.itemTitle}>
-                    {e.role}
-                    {e.company ? ` — ${e.company}` : ""}
-                  </Text>
-                  <Text style={styles.itemDates}>{e.dates}</Text>
-                </View>
-                {e.location ? <Text style={styles.itemSub}>{e.location}</Text> : null}
-                <Bullets items={e.bullets} />
-              </View>
-            ))}
-          </View>
-        )}
-
-        {r.projects.length > 0 && (
-          <View>
-            <Text style={styles.sectionTitle}>Projects</Text>
-            {r.projects.map((p, i) => (
-              <View key={i} wrap={false}>
-                <View style={styles.itemHeaderRow}>
-                  <Text style={styles.itemTitle}>{p.name}</Text>
-                  {p.link ? (
-                    <Link src={p.link} style={[styles.itemDates, styles.link]}>
-                      {p.link}
-                    </Link>
-                  ) : null}
-                </View>
-                {p.stack ? <Text style={styles.itemSub}>{p.stack}</Text> : null}
-                <Bullets items={p.bullets} />
-              </View>
-            ))}
-          </View>
-        )}
-
-        {r.education.length > 0 && (
-          <View>
-            <Text style={styles.sectionTitle}>Education</Text>
-            {r.education.map((ed, i) => (
-              <View key={i} wrap={false}>
-                <View style={styles.itemHeaderRow}>
-                  <Text style={styles.itemTitle}>{ed.institution}</Text>
-                  <Text style={styles.itemDates}>{ed.dates}</Text>
-                </View>
-                <Text style={styles.itemSub}>
-                  {ed.degree}
-                  {ed.score ? `  •  ${ed.score}` : ""}
-                </Text>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {r.certifications.length > 0 && (
-          <View>
-            <Text style={styles.sectionTitle}>Certifications</Text>
-            <Bullets items={r.certifications} />
-          </View>
-        )}
-
-        {r.achievements.length > 0 && (
-          <View>
-            <Text style={styles.sectionTitle}>Achievements</Text>
-            <Bullets items={r.achievements} />
-          </View>
-        )}
+        {order.map((id) => blocks[id])}
       </Page>
     </Document>
   );
@@ -265,8 +265,12 @@ export function resumeToPlainText(r: RewrittenResume): string {
   return lines.join("\n");
 }
 
-export async function downloadResumePdf(r: RewrittenResume, filename = "resume.pdf") {
-  const blob = await pdf(<ResumeDoc r={r} />).toBlob();
+export async function downloadResumePdf(
+  r: RewrittenResume,
+  filename = "resume.pdf",
+  template: TemplatePreset = "fresher",
+) {
+  const blob = await pdf(<ResumeDoc r={r} template={template} />).toBlob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
