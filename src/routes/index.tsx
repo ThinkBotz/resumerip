@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Toaster, toast } from "sonner";
 import { Flame, Skull, Zap } from "lucide-react";
@@ -7,6 +8,7 @@ import { extractPdfText } from "@/lib/pdf";
 import { analyzeResume, type ResumeAnalysis } from "@/lib/analyze.functions";
 import { UploadZone } from "@/components/UploadZone";
 import { ResultsView } from "@/components/ResultsView";
+import { AdSlot } from "@/components/AdSlot";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -70,10 +72,17 @@ function Index() {
             Resume<span className="text-primary">RIP</span>
           </span>
         </div>
-        <div className="hidden items-center gap-2 text-xs text-muted-foreground sm:flex">
-          <Zap className="size-3 text-accent" />
-          <span>Built for Indian freshers</span>
-        </div>
+        <nav className="flex items-center gap-4 text-xs">
+          <Link
+            to="/builder"
+            className="rounded-full border border-border px-3 py-1 font-medium text-foreground hover:bg-accent"
+          >
+            Resume Builder
+          </Link>
+          <span className="hidden items-center gap-1 text-muted-foreground sm:flex">
+            <Zap className="size-3 text-accent" /> Built for Indian freshers
+          </span>
+        </nav>
       </header>
 
       {analysis ? (
@@ -125,6 +134,11 @@ function Index() {
           <p className="mt-12 font-mono text-xs text-muted-foreground">
             Free. No login. Your file never leaves the request.
           </p>
+
+          {/* One ad slot, bottom of page only */}
+          <div className="mt-16 w-full">
+            <AdSlot slot={(import.meta as any).env?.VITE_ADSENSE_SLOT_HOME ?? ""} />
+          </div>
         </main>
       )}
     </div>
