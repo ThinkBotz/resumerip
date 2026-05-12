@@ -1,11 +1,14 @@
 import { useState } from "react";
 import type { ResumeAnalysis } from "@/lib/analyze.functions";
+import { rewriteResume, type RewrittenResume as RewrittenResumeType } from "@/lib/rewrite.functions";
+import { useServerFn } from "@tanstack/react-start";
 import { ScoreRing } from "./ScoreRing";
+import { RewrittenResume } from "./RewrittenResume";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Flame, AlertTriangle, CheckCircle2, Wrench, Users, RotateCcw, Copy } from "lucide-react";
+import { Flame, AlertTriangle, CheckCircle2, Wrench, Users, RotateCcw, Copy, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 const personaEmoji: Record<string, string> = {
@@ -18,12 +21,35 @@ const personaEmoji: Record<string, string> = {
 
 export function ResultsView({
   analysis,
+  resumeText,
   onReset,
 }: {
   analysis: ResumeAnalysis;
+  resumeText: string;
   onReset: () => void;
 }) {
   const [tab, setTab] = useState("scores");
+  const rewriteFn = useServerFn(rewriteResume);
+  const [rewriting, setRewriting] = useState(false);
+  const [rewritten, setRewritten] = useState<RewrittenResumeType | null>(null);
+
+  const handleRewrite = async () => {
+    setRewriting(true);
+    try {
+      const result = await rewriteFn({ data: { resumeText } });
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      setRewritten(result.resume as RewrittenResumeType);
+      toast.success("Fresh resume served. Hot.");
+    } catch (e) {
+      console.error(e);
+      toast.error("Rewrite failed. Try again.");
+    } finally {
+      setRewriting(false);
+    }
+  };
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-8 px-4 py-12">
@@ -47,6 +73,39 @@ export function ResultsView({
           </Button>
         </div>
       </Card>
+
+      {/* Rewrite CTA */}
+      <Card className="border-accent/40 bg-gradient-to-br from-accent/10 to-card p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <Sparkles className="mt-1 size-6 text-accent" />
+            <div>
+              <p className="text-base font-semibold text-foreground">
+                Want a better version?
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Let ResumeRIP rebuild your resume — clean, ATS-safe, recruiter-ready.
+                Download as PDF.
+              </p>
+            </div>
+          </div>
+          <Button onClick={handleRewrite} disabled={rewriting} className="shrink-0">
+            {rewriting ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" />
+                Rebuilding…
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 size-4" />
+                Rewrite my resume
+              </>
+            )}
+          </Button>
+        </div>
+      </Card>
+
+      {rewritten && <RewrittenResume resume={rewritten} />}
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 gap-1 bg-muted/50 p-1 sm:grid-cols-4">
