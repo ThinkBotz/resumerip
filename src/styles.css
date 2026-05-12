@@ -62,26 +62,36 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
+  /* ResumeRIP — edgy dark theme. Carbon black + danger red + neon lime. */
+  --radius: 0.5rem;
+  --background: oklch(0.14 0.012 60);
+  --foreground: oklch(0.97 0.01 80);
+  --card: oklch(0.18 0.014 60);
+  --card-foreground: oklch(0.97 0.01 80);
+  --popover: oklch(0.18 0.014 60);
+  --popover-foreground: oklch(0.97 0.01 80);
+  --primary: oklch(0.68 0.22 25);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.24 0.016 60);
+  --secondary-foreground: oklch(0.97 0.01 80);
+  --muted: oklch(0.22 0.014 60);
+  --muted-foreground: oklch(0.7 0.02 80);
+  --accent: oklch(0.88 0.2 130);
+  --accent-foreground: oklch(0.15 0.01 60);
+  --destructive: oklch(0.62 0.24 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.28 0.014 60);
+  --input: oklch(0.24 0.016 60);
+  --ring: oklch(0.68 0.22 25);
+  --success: oklch(0.72 0.18 150);
+  --warning: oklch(0.82 0.18 75);
+  --gradient-rip: linear-gradient(135deg, oklch(0.68 0.22 25), oklch(0.55 0.24 15));
+  --gradient-roast: linear-gradient(135deg, oklch(0.68 0.22 25) 0%, oklch(0.82 0.18 75) 100%);
+  --gradient-bg: radial-gradient(ellipse at top, oklch(0.22 0.04 25 / 40%), transparent 60%), radial-gradient(ellipse at bottom right, oklch(0.22 0.04 130 / 20%), transparent 60%);
+  --shadow-rip: 0 20px 60px -20px oklch(0.62 0.24 25 / 50%);
+  --shadow-card: 0 10px 30px -10px oklch(0 0 0 / 60%);
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -139,6 +149,17 @@
 
   body {
     background-color: var(--color-background);
+    background-image: var(--gradient-bg);
+    background-attachment: fixed;
     color: var(--color-foreground);
+    font-family: var(--font-display);
+    -webkit-font-smoothing: antialiased;
   }
 }
+
+@theme inline {
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
