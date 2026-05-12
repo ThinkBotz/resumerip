@@ -3,12 +3,26 @@ import { Button } from "@/components/ui/button";
 import { Download, Copy } from "lucide-react";
 import { toast } from "sonner";
 import type { RewrittenResume as RewrittenResumeType } from "@/lib/rewrite.functions";
-import { downloadResumePdf, resumeToPlainText } from "@/lib/resumePdf";
+
+function resumeToPlainText(r: RewrittenResumeType): string {
+  const lines: string[] = [];
+  if (r.name) lines.push(r.name);
+  if (r.headline) lines.push(r.headline);
+  lines.push(
+    [r.contact.email, r.contact.phone, r.contact.location].filter(Boolean).join(" | "),
+  );
+  const links = [r.contact.linkedin, r.contact.github, r.contact.portfolio].filter(Boolean);
+  if (links.length) lines.push(links.join(" | "));
+  lines.push("");
+  if (r.summary) lines.push("SUMMARY", r.summary, "");
+  return lines.join("\n");
+}
 
 export function RewrittenResume({ resume }: { resume: RewrittenResumeType }) {
   const handleDownload = async () => {
     try {
       const filename = `${(resume.name || "resume").replace(/\s+/g, "_")}_ResumeRIP.pdf`;
+      const { downloadResumePdf } = await import("@/lib/resumePdf");
       await downloadResumePdf(resume, filename);
       toast.success("PDF downloaded. Send it. Get hired. Touch grass.");
     } catch (e) {
