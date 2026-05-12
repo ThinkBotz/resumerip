@@ -541,13 +541,12 @@ function BuilderPage() {
 
           {/* Preview */}
           <div id="preview" className="lg:sticky lg:top-6 lg:self-start">
-            {canPreview ? (
-              <ResumePreview resume={r} template={template} />
-            ) : (
-              <Card className="flex h-72 items-center justify-center text-sm text-muted-foreground">
-                Start filling the form — your resume preview shows up here.
-              </Card>
+            {!canPreview && (
+              <p className="mb-2 text-xs text-muted-foreground">
+                Live preview — add your name to personalize.
+              </p>
             )}
+            <ResumePreview resume={r} template={template} />
           </div>
         </div>
 
