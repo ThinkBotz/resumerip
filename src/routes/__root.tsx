@@ -87,6 +87,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
     ],
+    scripts: (import.meta as any).env?.VITE_ADSENSE_CLIENT
+      ? [
+          {
+            async: true,
+            src: `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${(import.meta as any).env.VITE_ADSENSE_CLIENT}`,
+            crossOrigin: "anonymous",
+          },
+        ]
+      : [],
   }),
   shellComponent: RootShell,
   component: RootComponent,
