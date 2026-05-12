@@ -75,11 +75,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "ResumeRIP — Your Resume Might Be Cooked" },
       { name: "description", content: "Brutally honest AI roast + ATS analysis for Indian resumes." },
       { name: "author", content: "ResumeRIP" },
-      { property: "og:title", content: "ResumeRIP" },
-      { property: "og:description", content: "Upload your resume. Get roasted. Get hired." },
+      { property: "og:title", content: "ResumeRIP — Your Resume Might Be Cooked" },
+      { property: "og:description", content: "Brutally honest AI roast + ATS analysis for Indian resumes." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "ResumeRIP — Your Resume Might Be Cooked" },
+      { name: "twitter:description", content: "Brutally honest AI roast + ATS analysis for Indian resumes." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/02d33f92-9e63-447e-ad1f-d6d93f3ab547" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/02d33f92-9e63-447e-ad1f-d6d93f3ab547" },
     ],
     links: [
       {
