@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Copy } from "lucide-react";
 import { toast } from "sonner";
 import type { RewrittenResume as RewrittenResumeType } from "@/lib/rewrite.functions";
+import { TEMPLATE_PRESETS, type TemplatePreset } from "@/lib/atsScore";
 
 function resumeToPlainText(r: RewrittenResumeType): string {
   const lines: string[] = [];
@@ -18,12 +19,18 @@ function resumeToPlainText(r: RewrittenResumeType): string {
   return lines.join("\n");
 }
 
-export function RewrittenResume({ resume }: { resume: RewrittenResumeType }) {
+export function RewrittenResume({
+  resume,
+  template = "fresher",
+}: {
+  resume: RewrittenResumeType;
+  template?: TemplatePreset;
+}) {
   const handleDownload = async () => {
     try {
       const filename = `${(resume.name || "resume").replace(/\s+/g, "_")}_ResumeRIP.pdf`;
       const { downloadResumePdf } = await import("@/lib/resumePdf");
-      await downloadResumePdf(resume, filename);
+      await downloadResumePdf(resume, filename, template);
       toast.success("PDF downloaded. Send it. Get hired. Touch grass.");
     } catch (e) {
       console.error(e);
@@ -39,6 +46,85 @@ export function RewrittenResume({ resume }: { resume: RewrittenResumeType }) {
   const links = [resume.contact.linkedin, resume.contact.github, resume.contact.portfolio].filter(
     Boolean,
   );
+
+  const order = TEMPLATE_PRESETS[template].sectionOrder;
+
+  const sections: Record<string, React.ReactNode> = {
+    summary: resume.summary ? (
+      <Section key="summary" title="Summary">
+        <p className="text-sm">{resume.summary}</p>
+      </Section>
+    ) : null,
+    skills:
+      (resume.skills.languages.length ||
+        resume.skills.frameworks.length ||
+        resume.skills.tools.length ||
+        resume.skills.concepts.length) > 0 ? (
+        <Section key="skills" title="Skills">
+          <SkillRow label="Languages" items={resume.skills.languages} />
+          <SkillRow label="Frameworks" items={resume.skills.frameworks} />
+          <SkillRow label="Tools" items={resume.skills.tools} />
+          <SkillRow label="Concepts" items={resume.skills.concepts} />
+        </Section>
+      ) : null,
+    experience: resume.experience.length > 0 ? (
+      <Section key="experience" title="Experience">
+        {resume.experience.map((e, i) => (
+          <div key={i} className="mt-2">
+            <div className="flex justify-between text-sm">
+              <span className="font-bold">
+                {e.role}
+                {e.company ? ` — ${e.company}` : ""}
+              </span>
+              <span className="text-neutral-600">{e.dates}</span>
+            </div>
+            {e.location && <p className="text-xs text-neutral-600">{e.location}</p>}
+            <BulletList items={e.bullets} />
+          </div>
+        ))}
+      </Section>
+    ) : null,
+    projects: resume.projects.length > 0 ? (
+      <Section key="projects" title="Projects">
+        {resume.projects.map((p, i) => (
+          <div key={i} className="mt-2">
+            <div className="flex justify-between text-sm">
+              <span className="font-bold">{p.name}</span>
+              {p.link && <span className="text-blue-700">{p.link}</span>}
+            </div>
+            {p.stack && <p className="text-xs text-neutral-600">{p.stack}</p>}
+            <BulletList items={p.bullets} />
+          </div>
+        ))}
+      </Section>
+    ) : null,
+    education: resume.education.length > 0 ? (
+      <Section key="education" title="Education">
+        {resume.education.map((ed, i) => (
+          <div key={i} className="mt-2 text-sm">
+            <div className="flex justify-between">
+              <span className="font-bold">{ed.institution}</span>
+              <span className="text-neutral-600">{ed.dates}</span>
+            </div>
+            <p className="text-xs text-neutral-700">
+              {ed.degree}
+              {ed.score ? `  •  ${ed.score}` : ""}
+            </p>
+          </div>
+        ))}
+      </Section>
+    ) : null,
+    certifications: resume.certifications.length > 0 ? (
+      <Section key="certifications" title="Certifications">
+        <BulletList items={resume.certifications} />
+      </Section>
+    ) : null,
+    achievements: resume.achievements.length > 0 ? (
+      <Section key="achievements" title="Achievements">
+        <BulletList items={resume.achievements} />
+      </Section>
+    ) : null,
+  };
 
   return (
     <Card className="overflow-hidden border-success/40">
@@ -70,87 +156,7 @@ export function RewrittenResume({ resume }: { resume: RewrittenResumeType }) {
         )}
         <hr className="my-3 border-neutral-300" />
 
-        {resume.summary && (
-          <Section title="Summary">
-            <p className="text-sm">{resume.summary}</p>
-          </Section>
-        )}
-
-        {(resume.skills.languages.length ||
-          resume.skills.frameworks.length ||
-          resume.skills.tools.length ||
-          resume.skills.concepts.length) > 0 && (
-          <Section title="Skills">
-            <SkillRow label="Languages" items={resume.skills.languages} />
-            <SkillRow label="Frameworks" items={resume.skills.frameworks} />
-            <SkillRow label="Tools" items={resume.skills.tools} />
-            <SkillRow label="Concepts" items={resume.skills.concepts} />
-          </Section>
-        )}
-
-        {resume.experience.length > 0 && (
-          <Section title="Experience">
-            {resume.experience.map((e, i) => (
-              <div key={i} className="mt-2">
-                <div className="flex justify-between text-sm">
-                  <span className="font-bold">
-                    {e.role}
-                    {e.company ? ` — ${e.company}` : ""}
-                  </span>
-                  <span className="text-neutral-600">{e.dates}</span>
-                </div>
-                {e.location && (
-                  <p className="text-xs text-neutral-600">{e.location}</p>
-                )}
-                <BulletList items={e.bullets} />
-              </div>
-            ))}
-          </Section>
-        )}
-
-        {resume.projects.length > 0 && (
-          <Section title="Projects">
-            {resume.projects.map((p, i) => (
-              <div key={i} className="mt-2">
-                <div className="flex justify-between text-sm">
-                  <span className="font-bold">{p.name}</span>
-                  {p.link && <span className="text-blue-700">{p.link}</span>}
-                </div>
-                {p.stack && <p className="text-xs text-neutral-600">{p.stack}</p>}
-                <BulletList items={p.bullets} />
-              </div>
-            ))}
-          </Section>
-        )}
-
-        {resume.education.length > 0 && (
-          <Section title="Education">
-            {resume.education.map((ed, i) => (
-              <div key={i} className="mt-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="font-bold">{ed.institution}</span>
-                  <span className="text-neutral-600">{ed.dates}</span>
-                </div>
-                <p className="text-xs text-neutral-700">
-                  {ed.degree}
-                  {ed.score ? `  •  ${ed.score}` : ""}
-                </p>
-              </div>
-            ))}
-          </Section>
-        )}
-
-        {resume.certifications.length > 0 && (
-          <Section title="Certifications">
-            <BulletList items={resume.certifications} />
-          </Section>
-        )}
-
-        {resume.achievements.length > 0 && (
-          <Section title="Achievements">
-            <BulletList items={resume.achievements} />
-          </Section>
-        )}
+        {order.map((id) => sections[id])}
       </div>
     </Card>
   );
