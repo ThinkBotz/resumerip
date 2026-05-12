@@ -157,25 +157,115 @@ export function scoreResume(r: RewrittenResume, jd = ""): AtsResult {
   return { score, checks, jdMatch };
 }
 
-export type TemplatePreset = "fresher" | "internship" | "developer";
+export type TemplatePreset =
+  | "fresher"
+  | "internship"
+  | "developer"
+  | "minimal"
+  | "classic"
+  | "sidebar-blue"
+  | "sidebar-emerald"
+  | "sidebar-violet"
+  | "band-coral"
+  | "band-slate";
 
-export const TEMPLATE_PRESETS: Record<
-  TemplatePreset,
-  { label: string; description: string; sectionOrder: string[] }
-> = {
+export type TemplateLayout = "single" | "sidebar" | "band";
+
+export type TemplateMeta = {
+  label: string;
+  description: string;
+  category: "ATS-safe" | "Graphical";
+  layout: TemplateLayout;
+  accent: string; // hex color used in preview + PDF
+  font?: "Helvetica" | "Times-Roman";
+  sectionOrder: string[];
+  // For sidebar layout: sections that render in the left sidebar
+  sidebarSections?: string[];
+};
+
+export const TEMPLATE_PRESETS: Record<TemplatePreset, TemplateMeta> = {
   fresher: {
     label: "Fresher",
     description: "Education first. Best for first job after college.",
+    category: "ATS-safe",
+    layout: "single",
+    accent: "#111111",
     sectionOrder: ["summary", "education", "skills", "projects", "experience", "certifications", "achievements"],
   },
   internship: {
     label: "Internship",
     description: "Skills + projects forward. For internship applications.",
+    category: "ATS-safe",
+    layout: "single",
+    accent: "#111111",
     sectionOrder: ["summary", "skills", "projects", "education", "experience", "certifications", "achievements"],
   },
   developer: {
     label: "Developer",
     description: "Experience + skills first. For 1+ yr roles.",
+    category: "ATS-safe",
+    layout: "single",
+    accent: "#111111",
     sectionOrder: ["summary", "skills", "experience", "projects", "education", "certifications", "achievements"],
+  },
+  minimal: {
+    label: "Minimal",
+    description: "Tight, one-page, zero decoration. Pure ATS.",
+    category: "ATS-safe",
+    layout: "single",
+    accent: "#000000",
+    sectionOrder: ["summary", "experience", "projects", "skills", "education", "certifications", "achievements"],
+  },
+  classic: {
+    label: "Classic Serif",
+    description: "Times-style serif. Banking / consulting friendly.",
+    category: "ATS-safe",
+    layout: "single",
+    accent: "#111111",
+    font: "Times-Roman",
+    sectionOrder: ["summary", "education", "experience", "projects", "skills", "certifications", "achievements"],
+  },
+  "sidebar-blue": {
+    label: "Sidebar Blue",
+    description: "Two-column. Skills + contact in a blue sidebar.",
+    category: "Graphical",
+    layout: "sidebar",
+    accent: "#1e3a8a",
+    sectionOrder: ["summary", "experience", "projects", "education", "certifications", "achievements"],
+    sidebarSections: ["skills"],
+  },
+  "sidebar-emerald": {
+    label: "Sidebar Emerald",
+    description: "Two-column. Calm green sidebar, modern look.",
+    category: "Graphical",
+    layout: "sidebar",
+    accent: "#065f46",
+    sectionOrder: ["summary", "experience", "projects", "education", "certifications", "achievements"],
+    sidebarSections: ["skills"],
+  },
+  "sidebar-violet": {
+    label: "Sidebar Violet",
+    description: "Two-column. Bold violet sidebar for design / product roles.",
+    category: "Graphical",
+    layout: "sidebar",
+    accent: "#5b21b6",
+    sectionOrder: ["summary", "experience", "projects", "education", "certifications", "achievements"],
+    sidebarSections: ["skills"],
+  },
+  "band-coral": {
+    label: "Header Coral",
+    description: "Single column with a coral header band. Friendly, modern.",
+    category: "Graphical",
+    layout: "band",
+    accent: "#c2410c",
+    sectionOrder: ["summary", "skills", "experience", "projects", "education", "certifications", "achievements"],
+  },
+  "band-slate": {
+    label: "Header Slate",
+    description: "Single column with a slate header band. Clean, corporate.",
+    category: "Graphical",
+    layout: "band",
+    accent: "#1f2937",
+    sectionOrder: ["summary", "experience", "projects", "skills", "education", "certifications", "achievements"],
   },
 };
