@@ -1,48 +1,93 @@
 import { Document, Page, Text, View, StyleSheet, pdf, Link } from "@react-pdf/renderer";
 import type { RewrittenResume } from "./rewrite.functions";
-import { TEMPLATE_PRESETS, type TemplatePreset } from "./atsScore";
+import { TEMPLATE_PRESETS, type TemplatePreset, type TemplateMeta } from "./atsScore";
 
-const styles = StyleSheet.create({
-  page: {
-    paddingTop: 36,
-    paddingBottom: 36,
-    paddingHorizontal: 40,
-    fontSize: 10,
-    fontFamily: "Helvetica",
-    color: "#111111",
-    lineHeight: 1.4,
-  },
-  name: { fontSize: 20, fontFamily: "Helvetica-Bold", marginBottom: 2 },
-  headline: { fontSize: 11, color: "#444444", marginBottom: 4 },
-  contactRow: { fontSize: 9, color: "#333333", marginBottom: 10 },
-  hr: { borderBottomWidth: 1, borderBottomColor: "#222222", marginBottom: 8 },
-  sectionTitle: {
-    fontSize: 11,
-    fontFamily: "Helvetica-Bold",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginTop: 10,
-    marginBottom: 4,
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#888888",
-    paddingBottom: 2,
-  },
-  itemHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 4,
-  },
-  itemTitle: { fontFamily: "Helvetica-Bold", fontSize: 10 },
-  itemSub: { fontSize: 9, color: "#444444" },
-  itemDates: { fontSize: 9, color: "#444444" },
-  bullet: { flexDirection: "row", marginTop: 2 },
-  bulletDot: { width: 10, fontSize: 10 },
-  bulletText: { flex: 1, fontSize: 10 },
-  skillRow: { flexDirection: "row", marginTop: 2 },
-  skillLabel: { fontFamily: "Helvetica-Bold", fontSize: 10, width: 90 },
-  skillVals: { flex: 1, fontSize: 10 },
-  link: { color: "#0a58ca", textDecoration: "none" },
-});
+function makeStyles(meta: TemplateMeta) {
+  const baseFont = meta.font === "Times-Roman" ? "Times-Roman" : "Helvetica";
+  const boldFont = meta.font === "Times-Roman" ? "Times-Bold" : "Helvetica-Bold";
+  const accent = meta.accent;
+  return {
+    baseFont,
+    boldFont,
+    accent,
+    s: StyleSheet.create({
+      page: {
+        paddingTop: meta.layout === "band" ? 0 : 36,
+        paddingBottom: 36,
+        paddingHorizontal: meta.layout === "sidebar" ? 0 : meta.layout === "band" ? 0 : 40,
+        fontSize: 10,
+        fontFamily: baseFont,
+        color: "#111111",
+        lineHeight: 1.4,
+      },
+      name: { fontSize: 20, fontFamily: boldFont, marginBottom: 2 },
+      headline: { fontSize: 11, color: "#444444", marginBottom: 4 },
+      contactRow: { fontSize: 9, color: "#333333", marginBottom: 10 },
+      hr: { borderBottomWidth: 1, borderBottomColor: accent, marginBottom: 8 },
+      sectionTitle: {
+        fontSize: 11,
+        fontFamily: boldFont,
+        textTransform: "uppercase",
+        letterSpacing: 1,
+        marginTop: 10,
+        marginBottom: 4,
+        borderBottomWidth: 0.5,
+        borderBottomColor: accent,
+        paddingBottom: 2,
+        color: accent,
+      },
+      itemHeaderRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 4 },
+      itemTitle: { fontFamily: boldFont, fontSize: 10 },
+      itemSub: { fontSize: 9, color: "#444444" },
+      itemDates: { fontSize: 9, color: "#444444" },
+      bullet: { flexDirection: "row", marginTop: 2 },
+      bulletDot: { width: 10, fontSize: 10 },
+      bulletText: { flex: 1, fontSize: 10 },
+      skillRow: { flexDirection: "row", marginTop: 2 },
+      skillLabel: { fontFamily: boldFont, fontSize: 10, width: 90 },
+      skillVals: { flex: 1, fontSize: 10 },
+      link: { color: accent, textDecoration: "none" },
+      // Sidebar layout
+      sidebarRow: { flexDirection: "row", minHeight: "100%" },
+      sidebar: {
+        width: "34%",
+        backgroundColor: accent,
+        color: "#ffffff",
+        padding: 18,
+      },
+      sidebarName: { fontSize: 16, fontFamily: boldFont, color: "#ffffff" },
+      sidebarHeadline: { fontSize: 9, color: "#ffffff", opacity: 0.9, marginTop: 2 },
+      sidebarBlockTitle: {
+        fontSize: 9,
+        fontFamily: boldFont,
+        color: "#ffffff",
+        textTransform: "uppercase",
+        letterSpacing: 1,
+        borderBottomWidth: 0.5,
+        borderBottomColor: "#ffffff",
+        paddingBottom: 2,
+        marginTop: 14,
+        marginBottom: 4,
+      },
+      sidebarText: { fontSize: 9, color: "#ffffff", marginTop: 2 },
+      sidebarSubLabel: {
+        fontSize: 8,
+        fontFamily: boldFont,
+        color: "#ffffff",
+        opacity: 0.85,
+        marginTop: 4,
+        textTransform: "uppercase",
+      },
+      mainCol: { width: "66%", padding: 22 },
+      // Band layout
+      band: { backgroundColor: accent, paddingHorizontal: 36, paddingVertical: 22 },
+      bandName: { fontSize: 22, fontFamily: boldFont, color: "#ffffff" },
+      bandHeadline: { fontSize: 11, color: "#ffffff", opacity: 0.9, marginTop: 2 },
+      bandContact: { fontSize: 9, color: "#ffffff", opacity: 0.9, marginTop: 6 },
+      bandBody: { padding: 36 },
+    }),
+  };
+}
 
 function joinContact(c: RewrittenResume["contact"]) {
   return [c.email, c.phone, c.location].filter(Boolean).join("  |  ");
