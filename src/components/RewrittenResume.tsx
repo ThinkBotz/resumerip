@@ -129,6 +129,24 @@ export function RewrittenResume({
     ) : null,
   };
 
+  const customSectionNodes = (resume.customSections ?? [])
+    .filter((s) => s.title.trim() || s.fields.length || s.bullets.length)
+    .map((s) => (
+      <Section key={s.id} title={s.title || "Section"} accent={accent}>
+        {s.fields.length > 0 && (
+          <div className="space-y-1">
+            {s.fields.map((f, i) => (
+              <p key={i} className="text-sm">
+                {f.label && <span className="font-bold">{f.label}: </span>}
+                {f.value}
+              </p>
+            ))}
+          </div>
+        )}
+        <BulletList items={s.bullets} />
+      </Section>
+    ));
+
   const contactLine = [resume.contact.email, resume.contact.phone, resume.contact.location]
     .filter(Boolean)
     .join("  |  ");
@@ -184,6 +202,7 @@ export function RewrittenResume({
               {order
                 .filter((id) => !(meta.sidebarSections ?? []).includes(id))
                 .map((id) => sections[id])}
+              {customSectionNodes}
             </div>
           </div>
         ) : meta.layout === "band" ? (
@@ -196,7 +215,10 @@ export function RewrittenResume({
                 <p className="mt-1 text-xs opacity-90">{links.join("  |  ")}</p>
               )}
             </div>
-            <div className="p-8">{order.map((id) => sections[id])}</div>
+            <div className="p-8">
+              {order.map((id) => sections[id])}
+              {customSectionNodes}
+            </div>
           </div>
         ) : (
           <div className="p-8">
@@ -214,6 +236,7 @@ export function RewrittenResume({
             )}
             <hr className="my-3" style={{ borderColor: accent }} />
             {order.map((id) => sections[id])}
+            {customSectionNodes}
           </div>
         )}
       </div>
