@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Toaster, toast } from "sonner";
-import { Skull, Plus, Trash2, ArrowLeft } from "lucide-react";
+import { Skull, Plus, Trash2, ArrowLeft, Sparkles, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,13 @@ import { Label } from "@/components/ui/label";
 import { RewrittenResume as ResumePreview } from "@/components/RewrittenResume";
 import { AdSlot } from "@/components/AdSlot";
 import type { RewrittenResume } from "@/lib/rewrite.functions";
+import {
+  scoreResume,
+  extractKeywords,
+  TEMPLATE_PRESETS,
+  type TemplatePreset,
+} from "@/lib/atsScore";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/builder")({
   component: BuilderPage,
@@ -57,6 +64,10 @@ const splitLines = (s: string) =>
 
 function BuilderPage() {
   const [r, setR] = useState<RewrittenResume>(empty);
+  const [jd, setJd] = useState("");
+  const [template, setTemplate] = useState<TemplatePreset>("fresher");
+
+  const ats = useMemo(() => scoreResume(r, jd), [r, jd]);
 
   const update = <K extends keyof RewrittenResume>(k: K, v: RewrittenResume[K]) =>
     setR((p) => ({ ...p, [k]: v }));
@@ -78,6 +89,32 @@ function BuilderPage() {
     update("education", [...r.education, { institution: "", degree: "", dates: "", score: "" }]);
 
   const canPreview = r.name.trim().length > 0;
+
+  const tailorToJd = () => {
+    if (jd.trim().length < 20) {
+      toast.error("Paste a longer job description first.");
+      return;
+    }
+    const kws = extractKeywords(jd, 25);
+    const existing = new Set(
+      [
+        ...r.skills.languages,
+        ...r.skills.frameworks,
+        ...r.skills.tools,
+        ...r.skills.concepts,
+      ].map((s) => s.toLowerCase()),
+    );
+    const missing = kws.filter((k) => !existing.has(k));
+    if (missing.length === 0) {
+      toast.success("Already covering the JD keywords.");
+      return;
+    }
+    setR((p) => ({
+      ...p,
+      skills: { ...p.skills, concepts: [...p.skills.concepts, ...missing] },
+    }));
+    toast.success(`Added ${missing.length} JD keyword${missing.length > 1 ? "s" : ""} to Concepts. Edit as needed.`);
+  };
 
   return (
     <div className="min-h-screen text-foreground">
@@ -111,6 +148,80 @@ function BuilderPage() {
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Form */}
           <div className="space-y-6">
+            <Section title="ATS Score (live)">
+              <AtsMeter score={ats.score} />
+              <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                {ats.checks.map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex items-center gap-2 text-xs text-muted-foreground"
+                  >
+                    {c.passed ? (
+                      <Check className="size-3 text-success" />
+                    ) : (
+                      <X className="size-3 text-destructive" />
+                    )}
+                    <span className={c.passed ? "" : "text-foreground"}>{c.label}</span>
+                  </div>
+                ))}
+              </div>
+              {ats.jdMatch && (
+                <div className="mt-2 rounded-md border border-border bg-card/40 p-3 text-xs">
+                  <p className="mb-1 font-semibold">
+                    JD keyword coverage: {Math.round(ats.jdMatch.coverage * 100)}%
+                  </p>
+                  {ats.jdMatch.missing.length > 0 ? (
+                    <p className="text-muted-foreground">
+                      Missing: <span className="text-foreground">{ats.jdMatch.missing.slice(0, 12).join(", ")}</span>
+                    </p>
+                  ) : (
+                    <p className="text-success">All top keywords covered.</p>
+                  )}
+                </div>
+              )}
+            </Section>
+
+            <Section title="Template">
+              <div className="grid grid-cols-3 gap-2">
+                {(Object.keys(TEMPLATE_PRESETS) as TemplatePreset[]).map((t) => {
+                  const preset = TEMPLATE_PRESETS[t];
+                  const active = template === t;
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setTemplate(t)}
+                      className={cn(
+                        "rounded-md border p-3 text-left transition-colors",
+                        active
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/40",
+                      )}
+                    >
+                      <p className="text-sm font-semibold">{preset.label}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{preset.description}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </Section>
+
+            <Section
+              title="Job Description (optional)"
+              action={
+                <Button size="sm" variant="outline" onClick={tailorToJd}>
+                  <Sparkles className="mr-1 size-3" /> Tailor keywords
+                </Button>
+              }
+            >
+              <Textarea
+                value={jd}
+                onChange={(e) => setJd(e.target.value)}
+                placeholder="Paste the job description. We'll score JD keyword coverage and let you auto-add missing ones."
+                rows={4}
+              />
+            </Section>
+
             <Section title="Basics">
               <Field label="Full name">
                 <Input value={r.name} onChange={(e) => update("name", e.target.value)} placeholder="Aman Sharma" />
@@ -411,7 +522,7 @@ function BuilderPage() {
           {/* Preview */}
           <div id="preview" className="lg:sticky lg:top-6 lg:self-start">
             {canPreview ? (
-              <ResumePreview resume={r} />
+              <ResumePreview resume={r} template={template} />
             ) : (
               <Card className="flex h-72 items-center justify-center text-sm text-muted-foreground">
                 Start filling the form — your resume preview shows up here.
