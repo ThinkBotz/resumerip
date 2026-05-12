@@ -203,3 +203,11 @@ export type RewrittenResume = {
   certifications: string[];
   achievements: string[];
 };
+
+export type CustomSectionField = { label: string; value: string };
+export type CustomSection = {
+  id: string;
+  title: string;
+  fields: CustomSectionField[];
+  bullets: string[];
+};
