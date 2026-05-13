@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { AdBanner } from "./AdBanner";
 
+const CLIENT = (import.meta as any).env?.VITE_ADSENSE_CLIENT as string | undefined;
+
 /**
  * Small, dismissible sticky ad anchored to the bottom of the screen on mobile.
  * Hidden on desktop; reserves its own height so it never covers content.
@@ -11,11 +13,12 @@ export function MobileStickyAd({ slot }: { slot: string }) {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
+    if (!CLIENT || !slot) return;
     const t = window.setTimeout(() => setOpen(true), 1500);
     return () => window.clearTimeout(t);
-  }, []);
+  }, [slot]);
 
-  if (!open || dismissed) return null;
+  if (!CLIENT || !slot || !open || dismissed) return null;
 
   return (
     <div
