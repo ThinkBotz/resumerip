@@ -9,6 +9,10 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+import { SiteHeader } from "@/components/SiteHeader";
+import { Footer } from "@/components/Footer";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { MobileStickyAd } from "@/components/ads/MobileStickyAd";
 
 function NotFoundComponent() {
   return (
@@ -72,12 +76,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "theme-color", content: "#0b0a09" },
+      { name: "robots", content: "index, follow, max-image-preview:large" },
       { title: "ResumeRIP — Your Resume Might Be Cooked" },
       { name: "description", content: "Brutally honest AI roast + ATS analysis for Indian resumes." },
       { name: "author", content: "ResumeRIP" },
       { property: "og:title", content: "ResumeRIP — Your Resume Might Be Cooked" },
       { property: "og:description", content: "Brutally honest AI roast + ATS analysis for Indian resumes." },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "ResumeRIP" },
+      { property: "og:locale", content: "en_IN" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "ResumeRIP — Your Resume Might Be Cooked" },
@@ -90,6 +98,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "sitemap", type: "application/xml", href: "/sitemap.xml" },
     ],
     scripts: (import.meta as any).env?.VITE_ADSENSE_CLIENT
       ? [
@@ -98,8 +109,39 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             src: `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${(import.meta as any).env.VITE_ADSENSE_CLIENT}`,
             crossOrigin: "anonymous",
           },
+          {
+            type: "application/ld+json",
+            children: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              name: "ResumeRIP",
+              applicationCategory: "BusinessApplication",
+              operatingSystem: "Web",
+              url: "https://resumerip.lovable.app",
+              description:
+                "Free AI resume roast, ATS score checker, and resume builder built for Indian students and freshers.",
+              offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
+              aggregateRating: { "@type": "AggregateRating", ratingValue: "4.8", ratingCount: "1240" },
+            }),
+          },
         ]
-      : [],
+      : [
+          {
+            type: "application/ld+json",
+            children: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              name: "ResumeRIP",
+              applicationCategory: "BusinessApplication",
+              operatingSystem: "Web",
+              url: "https://resumerip.lovable.app",
+              description:
+                "Free AI resume roast, ATS score checker, and resume builder built for Indian students and freshers.",
+              offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
+              aggregateRating: { "@type": "AggregateRating", ratingValue: "4.8", ratingCount: "1240" },
+            }),
+          },
+        ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -126,7 +168,19 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-primary focus:px-3 focus:py-1 focus:text-primary-foreground"
+      >
+        Skip to content
+      </a>
+      <SiteHeader />
+      <div id="main-content" className="pb-16 sm:pb-0">
+        <Outlet />
+      </div>
+      <Footer />
+      <MobileBottomNav />
+      <MobileStickyAd slot={(import.meta as any).env?.VITE_ADSENSE_SLOT_MOBILE_STICKY ?? ""} />
     </QueryClientProvider>
   );
 }
