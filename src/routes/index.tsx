@@ -3,27 +3,58 @@ import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Toaster, toast } from "sonner";
-import { Flame, Skull, Zap } from "lucide-react";
+import { Flame, Zap, ShieldCheck, Sparkles, Star } from "lucide-react";
 import { extractPdfText } from "@/lib/pdf";
 import { analyzeResume, type ResumeAnalysis } from "@/lib/analyze.functions";
 import { UploadZone } from "@/components/UploadZone";
 import { ResultsView } from "@/components/ResultsView";
-import { AdSlot } from "@/components/AdSlot";
+import { InlineAd } from "@/components/ads/InlineAd";
+import { Testimonials } from "@/components/Testimonials";
+import { ShareButtons } from "@/components/ShareButtons";
 
 export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
     meta: [
-      { title: "ResumeRIP — Your Resume Might Be Cooked" },
+      { title: "Free AI Resume Roast & ATS Checker for Indian Students | ResumeRIP" },
       {
         name: "description",
         content:
-          "Upload your resume. Get a brutally honest ATS score, recruiter reactions, and a roast you'll never recover from. Built for Indian freshers.",
+          "Free AI resume checker for Indian freshers. Upload your PDF, get an ATS score, brutally honest feedback, recruiter reactions, and instant rewrites. No signup.",
       },
-      { property: "og:title", content: "ResumeRIP — Your Resume Might Be Cooked" },
+      {
+        name: "keywords",
+        content:
+          "AI resume checker, ATS score free, resume roast, Indian fresher resume, internship resume tips, resume builder students, resume rewrite AI",
+      },
+      { property: "og:title", content: "Free AI Resume Roast & ATS Checker | ResumeRIP" },
       {
         property: "og:description",
         content: "Brutally honest AI roast + ATS analysis for Indian resumes.",
+      },
+      { property: "og:url", content: "https://resumerip.lovable.app/" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Free AI Resume Roast & ATS Checker | ResumeRIP" },
+      {
+        name: "twitter:description",
+        content: "Brutally honest AI roast + ATS analysis for Indian resumes.",
+      },
+    ],
+    links: [{ rel: "canonical", href: "https://resumerip.lovable.app/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "ResumeRIP",
+          url: "https://resumerip.lovable.app/",
+          potentialAction: {
+            "@type": "SearchAction",
+            target: "https://resumerip.lovable.app/?q={search_term_string}",
+            "query-input": "required name=search_term_string",
+          },
+        }),
       },
     ],
   }),
@@ -64,82 +95,132 @@ function Index() {
     <div className="min-h-screen text-foreground">
       <Toaster position="top-center" theme="dark" />
 
-      {/* Nav */}
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-6">
-        <div className="flex items-center gap-2">
-          <Skull className="size-6 text-primary" />
-          <span className="font-mono text-lg font-bold tracking-tight">
-            Resume<span className="text-primary">RIP</span>
-          </span>
-        </div>
-        <nav className="flex items-center gap-4 text-xs">
-          <Link
-            to="/builder"
-            className="rounded-full border border-border px-3 py-1 font-medium text-foreground hover:bg-accent"
-          >
-            Resume Builder
-          </Link>
-          <span className="hidden items-center gap-1 text-muted-foreground sm:flex">
-            <Zap className="size-3 text-accent" /> Built for Indian freshers
-          </span>
-        </nav>
-      </header>
-
       {analysis ? (
-        <ResultsView
-          analysis={analysis}
-          resumeText={resumeText}
-          onReset={() => setAnalysis(null)}
-        />
+        <>
+          <ResultsView
+            analysis={analysis}
+            resumeText={resumeText}
+            onReset={() => setAnalysis(null)}
+          />
+          <div className="mx-auto w-full max-w-3xl px-4">
+            <ShareButtons className="justify-center" />
+          </div>
+        </>
       ) : (
-        <main className="mx-auto flex w-full max-w-4xl flex-col items-center px-4 pb-24 pt-12 text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs uppercase tracking-widest text-primary">
-            <Flame className="size-3" /> No mercy edition
-          </div>
+        <>
+          <main className="mx-auto flex w-full max-w-4xl flex-col items-center px-4 pb-16 pt-12 text-center">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs uppercase tracking-widest text-primary">
+              <Flame className="size-3" aria-hidden /> No mercy edition · 2026
+            </div>
 
-          <h1 className="text-balance text-5xl font-bold leading-[1.05] tracking-tight sm:text-7xl">
-            Your resume <br />
-            <span className="bg-gradient-to-r from-primary via-destructive to-primary bg-clip-text text-transparent">
-              might be cooked.
-            </span>
-          </h1>
+            <h1 className="text-balance text-5xl font-bold leading-[1.05] tracking-tight sm:text-7xl">
+              Free AI resume roast <br />
+              <span className="bg-gradient-to-r from-primary via-destructive to-primary bg-clip-text text-transparent">
+                + ATS checker for India.
+              </span>
+            </h1>
 
-          <p className="mt-6 max-w-xl text-pretty text-base text-muted-foreground sm:text-lg">
-            Upload your PDF. AI scans it like a TCS HR, judges it like a startup
-            founder, and roasts it like your batchmates would — but useful.
-          </p>
+            <p className="mt-6 max-w-xl text-pretty text-base text-muted-foreground sm:text-lg">
+              Upload your PDF. Get a real ATS score, recruiter reactions from TCS to
+              FAANG, and rewrites you can actually copy into your resume — in under 30 seconds.
+            </p>
 
-          <div className="mt-10 w-full">
-            <UploadZone onFile={handleFile} loading={loading} />
-          </div>
+            <ul className="mt-5 flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground">
+              <li className="inline-flex items-center gap-1"><ShieldCheck className="size-3.5 text-success" aria-hidden /> No signup</li>
+              <li className="inline-flex items-center gap-1"><Zap className="size-3.5 text-accent" aria-hidden /> Free forever</li>
+              <li className="inline-flex items-center gap-1"><Star className="size-3.5 text-warning" aria-hidden /> 1,200+ students</li>
+            </ul>
 
-          {/* Feature strip */}
-          <div className="mt-16 grid w-full max-w-3xl grid-cols-2 gap-3 text-left sm:grid-cols-4">
-            {[
-              { t: "ATS Score", d: "Real recruiter compatibility" },
-              { t: "🔥 Roast", d: "Brutally specific" },
-              { t: "5 Recruiters", d: "TCS to FAANG reactions" },
-              { t: "Rewrites", d: "Before → after fixes" },
-            ].map((f) => (
-              <div
-                key={f.t}
-                className="rounded-lg border border-border bg-card/40 p-4 backdrop-blur"
-              >
-                <p className="text-sm font-semibold text-foreground">{f.t}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{f.d}</p>
+            <div className="mt-10 w-full">
+              <UploadZone onFile={handleFile} loading={loading} />
+            </div>
+
+            <p className="mt-4 text-xs text-muted-foreground">
+              Or{" "}
+              <Link to="/builder" className="text-primary underline-offset-2 hover:underline">
+                build a fresh resume from scratch →
+              </Link>
+            </p>
+
+            {/* Feature strip */}
+            <section aria-labelledby="features-heading" className="mt-16 w-full max-w-3xl">
+              <h2 id="features-heading" className="sr-only">What you get</h2>
+              <div className="grid grid-cols-2 gap-3 text-left sm:grid-cols-4">
+                {[
+                  { t: "ATS Score", d: "Real recruiter compatibility" },
+                  { t: "🔥 Roast", d: "Brutally specific" },
+                  { t: "5 Recruiters", d: "TCS to FAANG reactions" },
+                  { t: "Rewrites", d: "Before → after fixes" },
+                ].map((f) => (
+                  <div
+                    key={f.t}
+                    className="rounded-xl border border-border/60 bg-card/40 p-4 backdrop-blur transition-colors hover:bg-card/60"
+                  >
+                    <p className="text-sm font-semibold text-foreground">{f.t}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{f.d}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </section>
 
-          <p className="mt-12 font-mono text-xs text-muted-foreground">
-            Free. No login. Your file never leaves the request.
-          </p>
+            <p className="mt-10 font-mono text-xs text-muted-foreground">
+              Free. No login. Your file never leaves the request.
+            </p>
+          </main>
 
-          {/* One ad slot, bottom of page only */}
-          <div className="mt-16 w-full">
-            <AdSlot slot={(import.meta as any).env?.VITE_ADSENSE_SLOT_HOME ?? ""} />
-          </div>
-        </main>
+          <Testimonials />
+
+          <section
+            aria-labelledby="builder-cta"
+            className="mx-auto w-full max-w-4xl px-4 pb-16"
+          >
+            <div className="rounded-3xl border border-border/60 bg-gradient-to-br from-card/80 to-card/40 p-8 text-center backdrop-blur sm:p-12">
+              <Sparkles className="mx-auto size-6 text-primary" aria-hidden />
+              <h2 id="builder-cta" className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
+                Don't have a resume yet?
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Build an ATS-safe resume in 5 minutes with our free Resume Builder — 10+
+                templates, live ATS meter, instant PDF.
+              </p>
+              <Link
+                to="/builder"
+                className="mt-5 inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg transition-transform hover:scale-[1.02]"
+              >
+                Open Resume Builder →
+              </Link>
+            </div>
+          </section>
+
+          <InlineAd
+            slot={(import.meta as any).env?.VITE_ADSENSE_SLOT_HOME ?? ""}
+            className="px-4"
+          />
+
+          {/* Internal linking for SEO */}
+          <section
+            aria-labelledby="related"
+            className="mx-auto w-full max-w-4xl px-4 pb-24"
+          >
+            <h2 id="related" className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+              Explore more
+            </h2>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <Link to="/builder" className="rounded-xl border border-border/60 bg-card/40 p-4 hover:bg-card/60">
+                <p className="text-sm font-semibold">Resume Builder</p>
+                <p className="mt-1 text-xs text-muted-foreground">10+ ATS-safe templates, live ATS meter</p>
+              </Link>
+              <Link to="/faq" className="rounded-xl border border-border/60 bg-card/40 p-4 hover:bg-card/60">
+                <p className="text-sm font-semibold">FAQ</p>
+                <p className="mt-1 text-xs text-muted-foreground">How the ATS score works, privacy, formats</p>
+              </Link>
+              <Link to="/about" className="rounded-xl border border-border/60 bg-card/40 p-4 hover:bg-card/60">
+                <p className="text-sm font-semibold">About ResumeRIP</p>
+                <p className="mt-1 text-xs text-muted-foreground">Built for Indian students, free forever</p>
+              </Link>
+            </div>
+          </section>
+        </>
       )}
     </div>
   );
