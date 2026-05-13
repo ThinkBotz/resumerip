@@ -15,7 +15,7 @@ export function ShareButtons({
 }: Props) {
   const [copied, setCopied] = useState(false);
   const shareUrl =
-    url ?? (typeof window !== "undefined" ? window.location.href : "https://resumerip.lovable.app");
+    url ?? (typeof window !== "undefined" ? window.location.href : "https://resumerip.vercel.app");
 
   const enc = encodeURIComponent;
   const twitter = `https://twitter.com/intent/tweet?text=${enc(text)}&url=${enc(shareUrl)}`;

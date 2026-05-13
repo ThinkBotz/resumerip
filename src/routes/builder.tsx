@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RewrittenResume as ResumePreview } from "@/components/RewrittenResume";
-import { AdSlot } from "@/components/AdSlot";
 import type { RewrittenResume } from "@/lib/rewrite.functions";
 import {
   scoreResume,
@@ -659,10 +658,7 @@ function BuilderPage() {
           </div>
         </div>
 
-        {/* Single, tasteful ad slot — bottom of page only */}
-        <div className="mt-16">
-          <AdSlot slot={(import.meta as any).env?.VITE_ADSENSE_SLOT_BUILDER ?? ""} />
-        </div>
+
       </main>
     </div>
   );

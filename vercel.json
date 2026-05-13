@@ -1,0 +1,12 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "nodeVersion": "20.x",
+  "env": {
+    "GOOGLE_GENERATIVE_AI_API_KEYS": {
+      "description": "Comma-separated Gemini API keys for quota distribution",
+      "required": true
+    }
+  }
+}

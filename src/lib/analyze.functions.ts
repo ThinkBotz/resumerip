@@ -26,144 +26,224 @@ Recruiter personalities to simulate (write in their voice):
 
 Be specific, concrete, and actionable. Scores are 0-100 integers.`;
 
-const analysisTool = {
-  type: "function" as const,
-  function: {
-    name: "submit_resume_analysis",
-    description: "Submit the complete resume analysis.",
-    parameters: {
-      type: "object",
-      properties: {
-        scores: {
+const analysisFunctionDef = {
+  name: "submit_resume_analysis",
+  description: "Submit the complete resume analysis.",
+  parameters: {
+    type: "object",
+    properties: {
+      scores: {
+        type: "object",
+        properties: {
+          ats: { type: "integer", minimum: 0, maximum: 100 },
+          recruiter: { type: "integer", minimum: 0, maximum: 100 },
+          fresher: { type: "integer", minimum: 0, maximum: 100 },
+          overall: { type: "integer", minimum: 0, maximum: 100 },
+        },
+        required: ["ats", "recruiter", "fresher", "overall"],
+      },
+      verdict: {
+        type: "string",
+        description: "One savage one-liner verdict on the resume. Max 140 chars.",
+      },
+      strengths: {
+        type: "array",
+        items: { type: "string" },
+        minItems: 1,
+        maxItems: 5,
+      },
+      red_flags: {
+        type: "array",
+        items: { type: "string" },
+        minItems: 1,
+        maxItems: 8,
+        description: "Specific issues found in the resume. Be concrete.",
+      },
+      roast: {
+        type: "array",
+        items: { type: "string" },
+        minItems: 5,
+        maxItems: 10,
+        description: "Savage but funny roast lines. Each references something specific.",
+      },
+      fixes: {
+        type: "array",
+        items: {
           type: "object",
           properties: {
-            ats: { type: "integer", minimum: 0, maximum: 100 },
-            recruiter: { type: "integer", minimum: 0, maximum: 100 },
-            fresher: { type: "integer", minimum: 0, maximum: 100 },
-            overall: { type: "integer", minimum: 0, maximum: 100 },
+            section: { type: "string" },
+            before: { type: "string" },
+            after: { type: "string" },
+            why: { type: "string" },
           },
-          required: ["ats", "recruiter", "fresher", "overall"],
-          additionalProperties: false,
+          required: ["section", "before", "after", "why"],
         },
-        verdict: {
-          type: "string",
-          description: "One savage one-liner verdict on the resume. Max 140 chars.",
-        },
-        strengths: {
-          type: "array",
-          items: { type: "string" },
-          minItems: 1,
-          maxItems: 5,
-        },
-        red_flags: {
-          type: "array",
-          items: { type: "string" },
-          minItems: 1,
-          maxItems: 8,
-          description: "Specific issues found in the resume. Be concrete.",
-        },
-        roast: {
-          type: "array",
-          items: { type: "string" },
-          minItems: 5,
-          maxItems: 10,
-          description: "Savage but funny roast lines. Each references something specific.",
-        },
-        fixes: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              section: { type: "string" },
-              before: { type: "string" },
-              after: { type: "string" },
-              why: { type: "string" },
+        minItems: 3,
+        maxItems: 8,
+      },
+      keywords_missing: {
+        type: "array",
+        items: { type: "string" },
+        maxItems: 15,
+      },
+      recruiters: {
+        type: "array",
+        minItems: 5,
+        maxItems: 5,
+        items: {
+          type: "object",
+          properties: {
+            persona: {
+              type: "string",
+              enum: ["TCS HR", "Startup Founder", "FAANG Recruiter", "Toxic HR", "Government Recruiter"],
             },
-            required: ["section", "before", "after", "why"],
-            additionalProperties: false,
+            reaction: { type: "string", description: "What they say in their voice. 2-3 sentences." },
+            shortlist_chance: { type: "integer", minimum: 0, maximum: 100 },
+            rejection_reason: { type: "string" },
           },
-          minItems: 3,
-          maxItems: 8,
-        },
-        keywords_missing: {
-          type: "array",
-          items: { type: "string" },
-          maxItems: 15,
-        },
-        recruiters: {
-          type: "array",
-          minItems: 5,
-          maxItems: 5,
-          items: {
-            type: "object",
-            properties: {
-              persona: {
-                type: "string",
-                enum: ["TCS HR", "Startup Founder", "FAANG Recruiter", "Toxic HR", "Government Recruiter"],
-              },
-              reaction: { type: "string", description: "What they say in their voice. 2-3 sentences." },
-              shortlist_chance: { type: "integer", minimum: 0, maximum: 100 },
-              rejection_reason: { type: "string" },
-            },
-            required: ["persona", "reaction", "shortlist_chance", "rejection_reason"],
-            additionalProperties: false,
-          },
+          required: ["persona", "reaction", "shortlist_chance", "rejection_reason"],
         },
       },
-      required: ["scores", "verdict", "strengths", "red_flags", "roast", "fixes", "keywords_missing", "recruiters"],
-      additionalProperties: false,
     },
+    required: ["scores", "verdict", "strengths", "red_flags", "roast", "fixes", "keywords_missing", "recruiters"],
   },
 };
+
+// Load API keys (support both single and multiple)
+function getApiKeys(): string[] {
+  const multiKeys = process.env.GOOGLE_GENERATIVE_AI_API_KEYS;
+  const singleKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+
+  if (multiKeys) {
+    return multiKeys.split(",").map(k => k.trim()).filter(Boolean);
+  }
+  if (singleKey) {
+    return [singleKey];
+  }
+  return [];
+}
+
+// Time-based key tracking for efficient distribution
+interface KeyTracker {
+  key: string;
+  lastUsedAt: number;
+  dailyUsageCount: number;
+  lastResetDate: string;
+}
+
+let keyTrackers: KeyTracker[] = [];
+
+function initializeKeyTrackers(keys: string[]): void {
+  const today = new Date().toISOString().split('T')[0];
+  keyTrackers = keys.map(key => ({
+    key,
+    lastUsedAt: 0,
+    dailyUsageCount: 0,
+    lastResetDate: today,
+  }));
+}
+
+function getNextApiKey(keys: string[]): string {
+  if (keys.length === 0) throw new Error("No API keys configured");
+  
+  // Initialize on first call
+  if (keyTrackers.length === 0) {
+    initializeKeyTrackers(keys);
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+
+  // Reset daily counts if date changed
+  for (const tracker of keyTrackers) {
+    if (tracker.lastResetDate !== today) {
+      tracker.dailyUsageCount = 0;
+      tracker.lastResetDate = today;
+    }
+  }
+
+  // Select key with oldest usage (natural spacing prevents rate limits)
+  const selectedTracker = keyTrackers.reduce((oldest, current) =>
+    current.lastUsedAt < oldest.lastUsedAt ? current : oldest
+  );
+
+  // Update tracking
+  selectedTracker.lastUsedAt = Date.now();
+  selectedTracker.dailyUsageCount++;
+
+  // Log for monitoring
+  const usage = keyTrackers.map((t, i) => `key${i + 1}:${t.dailyUsageCount}`).join(' | ');
+  console.log(`[Gemini API] Selected key (${selectedTracker.key.slice(0, 10)}...) | Daily usage: ${usage}`);
+
+  return selectedTracker.key;
+}
 
 export const analyzeResume = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => inputSchema.parse(input))
   .handler(async ({ data }) => {
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) {
-      return { ok: false as const, error: "AI service not configured." };
+    const keys = getApiKeys();
+    if (keys.length === 0) {
+      return { ok: false as const, error: "Gemini API key not configured. Set GOOGLE_GENERATIVE_AI_API_KEY." };
     }
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          {
-            role: "user",
-            content: `Analyze this resume thoroughly. Be specific. Roast hard.\n\n--- RESUME START ---\n${data.resumeText}\n--- RESUME END ---`,
-          },
-        ],
-        tools: [analysisTool],
-        tool_choice: { type: "function", function: { name: "submit_resume_analysis" } },
-      }),
-    });
-
-    if (!res.ok) {
-      if (res.status === 429) return { ok: false as const, error: "Too many requests. Try again in a moment." };
-      if (res.status === 402) return { ok: false as const, error: "AI credits exhausted. Add credits in Workspace > Usage." };
-      const txt = await res.text();
-      console.error("AI gateway error:", res.status, txt);
-      return { ok: false as const, error: "AI service error. Try again." };
-    }
-
-    const json = await res.json();
-    const call = json.choices?.[0]?.message?.tool_calls?.[0];
-    if (!call?.function?.arguments) {
-      return { ok: false as const, error: "AI returned no analysis. Try again." };
-    }
+    const apiKey = getNextApiKey(keys);
 
     try {
-      const parsed = JSON.parse(call.function.arguments);
-      return { ok: true as const, analysis: parsed };
-    } catch (e) {
-      console.error("Parse error:", e);
-      return { ok: false as const, error: "Could not parse analysis." };
+      const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents: [
+            {
+              parts: [
+                {
+                  text: `Analyze this resume thoroughly. Be specific. Roast hard.\n\n--- RESUME START ---\n${data.resumeText}\n--- RESUME END ---`,
+                },
+              ],
+            },
+          ],
+          tools: [
+            {
+              functionDeclarations: [analysisFunctionDef],
+            },
+          ],
+          toolConfig: {
+            functionCallingConfig: {
+              mode: "AUTO",
+            },
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        const txt = await res.text();
+        console.error("Gemini API error:", res.status, txt);
+        if (res.status === 429) {
+          return { ok: false as const, error: "Rate limited. Try again in a moment." };
+        }
+        return { ok: false as const, error: "Gemini API error. Try again." };
+      }
+
+      const json = await res.json();
+      const functionCall = json.candidates?.[0]?.content?.parts?.find((p: any) => p.functionCall);
+
+      if (!functionCall?.functionCall?.args) {
+        console.error("No function call in response:", json);
+        return { ok: false as const, error: "Gemini returned no analysis. Try again." };
+      }
+
+      try {
+        const parsed = functionCall.functionCall.args;
+        return { ok: true as const, analysis: parsed };
+      } catch (e) {
+        console.error("Parse error:", e);
+        return { ok: false as const, error: "Could not parse analysis." };
+      }
+    } catch (error) {
+      console.error("Request error:", error);
+      return { ok: false as const, error: "Network error. Try again." };
     }
   });
 

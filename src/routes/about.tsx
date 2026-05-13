@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 const TITLE = "About ResumeRIP — Free AI Resume Roast & Builder for Indian Students";
 const DESC =
   "ResumeRIP is a free AI tool built for Indian freshers, students, and interns. Roast your resume, get an ATS score, and build a recruiter-ready PDF in seconds.";
-const URL = "https://resumerip.lovable.app/about";
+const URL = "https://resumerip.vercel.app/about";
 
 export const Route = createFileRoute("/about")({
   component: AboutPage,
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/about")({
           "@context": "https://schema.org",
           "@type": "BreadcrumbList",
           itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Home", item: "https://resumerip.lovable.app/" },
+            { "@type": "ListItem", position: 1, name: "Home", item: "https://resumerip.vercel.app/" },
             { "@type": "ListItem", position: 2, name: "About", item: URL },
           ],
         }),

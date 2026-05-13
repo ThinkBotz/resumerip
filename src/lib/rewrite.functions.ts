@@ -22,144 +22,222 @@ RULES — non-negotiable:
 - Categorize skills sensibly (Languages, Frameworks/Libraries, Tools, Concepts).
 - If a section has no data in the original, return an empty array — don't make stuff up.`;
 
-const rewriteTool = {
-  type: "function" as const,
-  function: {
-    name: "submit_rewritten_resume",
-    description: "Submit the rewritten ATS-friendly resume.",
-    parameters: {
-      type: "object",
-      properties: {
-        name: { type: "string" },
-        headline: { type: "string", description: "Short tagline e.g. 'Final-year CSE student | Full-stack developer'" },
-        contact: {
-          type: "object",
-          properties: {
-            email: { type: "string" },
-            phone: { type: "string" },
-            location: { type: "string" },
-            linkedin: { type: "string" },
-            github: { type: "string" },
-            portfolio: { type: "string" },
-          },
-          required: ["email", "phone", "location", "linkedin", "github", "portfolio"],
-          additionalProperties: false,
+const rewriteFunctionDef = {
+  name: "submit_rewritten_resume",
+  description: "Submit the rewritten ATS-friendly resume.",
+  parameters: {
+    type: "object",
+    properties: {
+      name: { type: "string" },
+      headline: { type: "string", description: "Short tagline e.g. 'Final-year CSE student | Full-stack developer'" },
+      contact: {
+        type: "object",
+        properties: {
+          email: { type: "string" },
+          phone: { type: "string" },
+          location: { type: "string" },
+          linkedin: { type: "string" },
+          github: { type: "string" },
+          portfolio: { type: "string" },
         },
-        summary: { type: "string" },
-        skills: {
-          type: "object",
-          properties: {
-            languages: { type: "array", items: { type: "string" } },
-            frameworks: { type: "array", items: { type: "string" } },
-            tools: { type: "array", items: { type: "string" } },
-            concepts: { type: "array", items: { type: "string" } },
-          },
-          required: ["languages", "frameworks", "tools", "concepts"],
-          additionalProperties: false,
-        },
-        experience: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              company: { type: "string" },
-              role: { type: "string" },
-              dates: { type: "string" },
-              location: { type: "string" },
-              bullets: { type: "array", items: { type: "string" } },
-            },
-            required: ["company", "role", "dates", "location", "bullets"],
-            additionalProperties: false,
-          },
-        },
-        projects: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              name: { type: "string" },
-              stack: { type: "string" },
-              link: { type: "string" },
-              bullets: { type: "array", items: { type: "string" } },
-            },
-            required: ["name", "stack", "link", "bullets"],
-            additionalProperties: false,
-          },
-        },
-        education: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              institution: { type: "string" },
-              degree: { type: "string" },
-              dates: { type: "string" },
-              score: { type: "string" },
-            },
-            required: ["institution", "degree", "dates", "score"],
-            additionalProperties: false,
-          },
-        },
-        certifications: { type: "array", items: { type: "string" } },
-        achievements: { type: "array", items: { type: "string" } },
+        required: ["email", "phone", "location", "linkedin", "github", "portfolio"],
       },
-      required: [
-        "name", "headline", "contact", "summary", "skills",
-        "experience", "projects", "education", "certifications", "achievements",
-      ],
-      additionalProperties: false,
+      summary: { type: "string" },
+      skills: {
+        type: "object",
+        properties: {
+          languages: { type: "array", items: { type: "string" } },
+          frameworks: { type: "array", items: { type: "string" } },
+          tools: { type: "array", items: { type: "string" } },
+          concepts: { type: "array", items: { type: "string" } },
+        },
+        required: ["languages", "frameworks", "tools", "concepts"],
+      },
+      experience: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            company: { type: "string" },
+            role: { type: "string" },
+            dates: { type: "string" },
+            location: { type: "string" },
+            bullets: { type: "array", items: { type: "string" } },
+          },
+          required: ["company", "role", "dates", "location", "bullets"],
+        },
+      },
+      projects: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            stack: { type: "string" },
+            link: { type: "string" },
+            bullets: { type: "array", items: { type: "string" } },
+          },
+          required: ["name", "stack", "link", "bullets"],
+        },
+      },
+      education: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            institution: { type: "string" },
+            degree: { type: "string" },
+            dates: { type: "string" },
+            score: { type: "string" },
+          },
+          required: ["institution", "degree", "dates", "score"],
+        },
+      },
+      certifications: { type: "array", items: { type: "string" } },
+      achievements: { type: "array", items: { type: "string" } },
     },
+    required: [
+      "name", "headline", "contact", "summary", "skills",
+      "experience", "projects", "education", "certifications", "achievements",
+    ],
   },
 };
+
+// Load API keys (support both single and multiple)
+function getApiKeys(): string[] {
+  const multiKeys = process.env.GOOGLE_GENERATIVE_AI_API_KEYS;
+  const singleKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+
+  if (multiKeys) {
+    return multiKeys.split(",").map(k => k.trim()).filter(Boolean);
+  }
+  if (singleKey) {
+    return [singleKey];
+  }
+  return [];
+}
+
+// Time-based key tracking for efficient distribution
+interface KeyTracker {
+  key: string;
+  lastUsedAt: number;
+  dailyUsageCount: number;
+  lastResetDate: string;
+}
+
+let keyTrackers: KeyTracker[] = [];
+
+function initializeKeyTrackers(keys: string[]): void {
+  const today = new Date().toISOString().split('T')[0];
+  keyTrackers = keys.map(key => ({
+    key,
+    lastUsedAt: 0,
+    dailyUsageCount: 0,
+    lastResetDate: today,
+  }));
+}
+
+function getNextApiKey(keys: string[]): string {
+  if (keys.length === 0) throw new Error("No API keys configured");
+  
+  // Initialize on first call
+  if (keyTrackers.length === 0) {
+    initializeKeyTrackers(keys);
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+
+  // Reset daily counts if date changed
+  for (const tracker of keyTrackers) {
+    if (tracker.lastResetDate !== today) {
+      tracker.dailyUsageCount = 0;
+      tracker.lastResetDate = today;
+    }
+  }
+
+  // Select key with oldest usage (natural spacing prevents rate limits)
+  const selectedTracker = keyTrackers.reduce((oldest, current) =>
+    current.lastUsedAt < oldest.lastUsedAt ? current : oldest
+  );
+
+  // Update tracking
+  selectedTracker.lastUsedAt = Date.now();
+  selectedTracker.dailyUsageCount++;
+
+  // Log for monitoring
+  const usage = keyTrackers.map((t, i) => `key${i + 1}:${t.dailyUsageCount}`).join(' | ');
+  console.log(`[Gemini API] Selected key (${selectedTracker.key.slice(0, 10)}...) | Daily usage: ${usage}`);
+
+  return selectedTracker.key;
+}
 
 export const rewriteResume = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => inputSchema.parse(input))
   .handler(async ({ data }) => {
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) {
-      return { ok: false as const, error: "AI service not configured." };
+    const keys = getApiKeys();
+    if (keys.length === 0) {
+      return { ok: false as const, error: "Gemini API key not configured. Set GOOGLE_GENERATIVE_AI_API_KEY." };
     }
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          {
-            role: "user",
-            content: `Rewrite this resume into a clean, ATS-friendly version. Keep all facts; strengthen the wording.\n\n--- RESUME START ---\n${data.resumeText}\n--- RESUME END ---`,
-          },
-        ],
-        tools: [rewriteTool],
-        tool_choice: { type: "function", function: { name: "submit_rewritten_resume" } },
-      }),
-    });
-
-    if (!res.ok) {
-      if (res.status === 429) return { ok: false as const, error: "Too many requests. Try again in a moment." };
-      if (res.status === 402) return { ok: false as const, error: "AI credits exhausted. Add credits in Workspace > Usage." };
-      const txt = await res.text();
-      console.error("AI gateway error (rewrite):", res.status, txt);
-      return { ok: false as const, error: "AI service error. Try again." };
-    }
-
-    const json = await res.json();
-    const call = json.choices?.[0]?.message?.tool_calls?.[0];
-    if (!call?.function?.arguments) {
-      return { ok: false as const, error: "AI returned no rewrite. Try again." };
-    }
+    const apiKey = getNextApiKey(keys);
 
     try {
-      const parsed = JSON.parse(call.function.arguments);
-      return { ok: true as const, resume: parsed };
-    } catch (e) {
-      console.error("Parse error (rewrite):", e);
-      return { ok: false as const, error: "Could not parse rewrite." };
+      const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents: [
+            {
+              parts: [
+                {
+                  text: `Rewrite this resume into a clean, ATS-friendly version. Keep all facts; strengthen the wording.\n\n--- RESUME START ---\n${data.resumeText}\n--- RESUME END ---`,
+                },
+              ],
+            },
+          ],
+          tools: [
+            {
+              functionDeclarations: [rewriteFunctionDef],
+            },
+          ],
+          toolConfig: {
+            functionCallingConfig: {
+              mode: "AUTO",
+            },
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        const txt = await res.text();
+        console.error("Gemini API error (rewrite):", res.status, txt);
+        if (res.status === 429) {
+          return { ok: false as const, error: "Rate limited. Try again in a moment." };
+        }
+        return { ok: false as const, error: "Gemini API error. Try again." };
+      }
+
+      const json = await res.json();
+      const functionCall = json.candidates?.[0]?.content?.parts?.find((p: any) => p.functionCall);
+
+      if (!functionCall?.functionCall?.args) {
+        console.error("No function call in response:", json);
+        return { ok: false as const, error: "Gemini returned no rewrite. Try again." };
+      }
+
+      try {
+        const parsed = functionCall.functionCall.args;
+        return { ok: true as const, resume: parsed };
+      } catch (e) {
+        console.error("Parse error (rewrite):", e);
+        return { ok: false as const, error: "Could not parse rewrite." };
+      }
+    } catch (error) {
+      console.error("Request error:", error);
+      return { ok: false as const, error: "Network error. Try again." };
     }
   });
 

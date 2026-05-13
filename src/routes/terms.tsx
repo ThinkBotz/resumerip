@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 
 const TITLE = "Terms of Service — ResumeRIP";
 const DESC = "Terms of using ResumeRIP, the free AI resume roast and builder.";
-const URL = "https://resumerip.lovable.app/terms";
+const URL = "https://resumerip.vercel.app/terms";
 
 export const Route = createFileRoute("/terms")({
   component: TermsPage,

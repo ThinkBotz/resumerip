@@ -8,8 +8,6 @@ import { extractPdfText } from "@/lib/pdf";
 import { analyzeResume, type ResumeAnalysis } from "@/lib/analyze.functions";
 import { UploadZone } from "@/components/UploadZone";
 import { ResultsView } from "@/components/ResultsView";
-import { InlineAd } from "@/components/ads/InlineAd";
-import { Testimonials } from "@/components/Testimonials";
 import { ShareButtons } from "@/components/ShareButtons";
 
 export const Route = createFileRoute("/")({
@@ -32,7 +30,7 @@ export const Route = createFileRoute("/")({
         property: "og:description",
         content: "Brutally honest AI roast + ATS analysis for Indian resumes.",
       },
-      { property: "og:url", content: "https://resumerip.lovable.app/" },
+      { property: "og:url", content: "https://resumerip.vercel.app/" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Free AI Resume Roast & ATS Checker | ResumeRIP" },
       {
@@ -40,7 +38,7 @@ export const Route = createFileRoute("/")({
         content: "Brutally honest AI roast + ATS analysis for Indian resumes.",
       },
     ],
-    links: [{ rel: "canonical", href: "https://resumerip.lovable.app/" }],
+    links: [{ rel: "canonical", href: "https://resumerip.vercel.app/" }],
     scripts: [
       {
         type: "application/ld+json",
@@ -48,10 +46,10 @@ export const Route = createFileRoute("/")({
           "@context": "https://schema.org",
           "@type": "WebSite",
           name: "ResumeRIP",
-          url: "https://resumerip.lovable.app/",
+          url: "https://resumerip.vercel.app/",
           potentialAction: {
             "@type": "SearchAction",
-            target: "https://resumerip.lovable.app/?q={search_term_string}",
+            target: "https://resumerip.vercel.app/?q={search_term_string}",
             "query-input": "required name=search_term_string",
           },
         }),
@@ -168,8 +166,6 @@ function Index() {
             </p>
           </main>
 
-          <Testimonials />
-
           <section
             aria-labelledby="builder-cta"
             className="mx-auto w-full max-w-4xl px-4 pb-16"
@@ -191,11 +187,6 @@ function Index() {
               </Link>
             </div>
           </section>
-
-          <InlineAd
-            slot={(import.meta as any).env?.VITE_ADSENSE_SLOT_HOME ?? ""}
-            className="px-4"
-          />
 
           {/* Internal linking for SEO */}
           <section

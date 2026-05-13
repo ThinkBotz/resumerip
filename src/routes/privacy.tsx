@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 
 const TITLE = "Privacy Policy — ResumeRIP";
 const DESC = "How ResumeRIP handles your resume data: we don't store your file, we don't sell your data.";
-const URL = "https://resumerip.lovable.app/privacy";
+const URL = "https://resumerip.vercel.app/privacy";
 
 export const Route = createFileRoute("/privacy")({
   component: PrivacyPage,
@@ -40,7 +40,7 @@ function PrivacyPage() {
         </p>
         <h2 className="text-lg font-semibold">AI processing</h2>
         <p>
-          The extracted text is sent to our AI provider (Lovable AI Gateway) solely to
+          The extracted text is sent to our AI provider (Google Gemini API) solely to
           generate the analysis you see. It is not used for training.
         </p>
         <h2 className="text-lg font-semibold">Analytics & ads</h2>

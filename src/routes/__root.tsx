@@ -12,7 +12,6 @@ import appCss from "../styles.css?url";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
-import { MobileStickyAd } from "@/components/ads/MobileStickyAd";
 
 function NotFoundComponent() {
   return (
@@ -87,7 +86,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:site_name", content: "ResumeRIP" },
       { property: "og:locale", content: "en_IN" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:site", content: "@resumerip" },
       { name: "twitter:title", content: "ResumeRIP — Your Resume Might Be Cooked" },
       { name: "twitter:description", content: "Brutally honest AI roast + ATS analysis for Indian resumes." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/02d33f92-9e63-447e-ad1f-d6d93f3ab547" },
@@ -117,7 +116,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               name: "ResumeRIP",
               applicationCategory: "BusinessApplication",
               operatingSystem: "Web",
-              url: "https://resumerip.lovable.app",
+              url: "https://resumerip.vercel.app",
               description:
                 "Free AI resume roast, ATS score checker, and resume builder built for Indian students and freshers.",
               offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
@@ -134,7 +133,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               name: "ResumeRIP",
               applicationCategory: "BusinessApplication",
               operatingSystem: "Web",
-              url: "https://resumerip.lovable.app",
+              url: "https://resumerip.vercel.app",
               description:
                 "Free AI resume roast, ATS score checker, and resume builder built for Indian students and freshers.",
               offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
@@ -180,7 +179,6 @@ function RootComponent() {
       </div>
       <Footer />
       <MobileBottomNav />
-      <MobileStickyAd slot={(import.meta as any).env?.VITE_ADSENSE_SLOT_MOBILE_STICKY ?? ""} />
     </QueryClientProvider>
   );
 }

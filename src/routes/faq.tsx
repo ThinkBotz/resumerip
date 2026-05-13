@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 const TITLE = "FAQ — ResumeRIP | AI Resume Checker & Builder for Indian Students";
 const DESC =
   "Common questions about ResumeRIP — the free AI resume roast, ATS score checker, and resume builder for Indian freshers and interns.";
-const URL = "https://resumerip.lovable.app/faq";
+const URL = "https://resumerip.vercel.app/faq";
 
 const faqs = [
   {
@@ -66,7 +66,7 @@ export const Route = createFileRoute("/faq")({
           "@context": "https://schema.org",
           "@type": "BreadcrumbList",
           itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Home", item: "https://resumerip.lovable.app/" },
+            { "@type": "ListItem", position: 1, name: "Home", item: "https://resumerip.vercel.app/" },
             { "@type": "ListItem", position: 2, name: "FAQ", item: URL },
           ],
         }),
