@@ -3,9 +3,6 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "env": {
-    "GOOGLE_GENERATIVE_AI_API_KEYS": {
-      "description": "Comma-separated Gemini API keys for quota distribution",
-      "required": true
-    }
+    "GOOGLE_GENERATIVE_AI_API_KEYS": ""
   }
 }
