@@ -1,76 +1,26 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-const personalizationSchema = z.object({
-  targetRole: z.string().optional(),
-  preferredTone: z.string().optional(),
-  githubUsername: z.string().optional(),
-  notes: z.string().optional(),
-});
-
 const inputSchema = z.object({
   resumeText: z.string().min(50).max(40000),
-  redFlags: z.array(z.string()).optional(),
-  keywordsMissing: z.array(z.string()).optional(),
-  useFeedback: z.boolean().optional(),
-  personalization: personalizationSchema.optional(),
 });
 
-const SYSTEM_PROMPT = `You are ResumeRIP's elite resume rebuilder — top Indian tech recruiter + ATS expert combined.
-Your job: Transform a messy resume into a RECRUITER-WINNING, ATS-PERFECT version that gets shortlisted.
+const SYSTEM_PROMPT = `You are ResumeRIP's resume rebuilder — a top-tier Indian tech resume writer.
+You take a messy, fluffy, or weak resume and rewrite it into a clean, ATS-friendly, recruiter-pleasing version.
 
-You ALWAYS respond ONLY by calling 'submit_rewritten_resume'. Never plain text.
+You ALWAYS respond ONLY by calling the provided tool 'submit_rewritten_resume'. Never plain text.
 
-━━━ ABSOLUTE RULES (BREAK = FAIL) ━━━
-1. DO NOT fabricate: No invented companies, roles, dates, degrees, CGPA, links, or metrics.
-2. KEEP FACTUAL DATA EXACTLY: Names, dates, institutions, scores — zero changes.
-3. RUTHLESSLY REWRITE everything else for impact:
-   - Weak/irrelevant bullets → DELETE or STRENGTHEN with action verbs + metrics.
-   - Irrelevant certifications → REMOVE (Excel, Udemy fluff).
-   - Duplicate roles/entries → CONSOLIDATE.
-   - Vague achievements → MAKE CONCRETE with deliverables.
-
-━━━ BULLET STYLE: Power Verb + Impact ━━━
-Format: "[Power Verb] [Object] using [Tech], [Quantified Impact]."
-Examples:
-- ❌ "Responsible for building a website" → ✅ "Designed and shipped React platform serving 10K+ users, 40% faster checkout."
-- ❌ "Participated in hackathon" → ✅ "Won Smart India Hackathon 2024: Built AI debris tracker, deployed on Firebase."
-- ❌ "Worked with databases" → ✅ "Architected Node.js API handling 5K req/sec, 60% query optimization via caching."
-
-Metrics (if available in original ONLY):
-- Users/Traffic: 10K+ users, 100K+ API calls/day, 500GB+ data processed
-- Performance: 40% faster, 60% reduction, 3x improvement
-- Business: Revenue, cost savings, user retention increase
-- Shipping: Deployed, launched (past tense)
-
-If NO metrics available → omit them. NEVER fabricate numbers.
-
-━━━ CONTENT TRANSFORMATION ━━━
-Summary: 2-3 lines ONLY (~40-50 words). Specific, punchy, no buzzwords.
-Remove immediately:
-  - "Passionate", "Hard-working", "Results-oriented", "Self-motivated", "Team player", "Problem-solver"
-  - Generic participation certificates (Excel, Google courses)
-  - Future-dated achievements
-  - Duplicate entries
-Keep only:
-  - Role-specific titles, tech stacks, quantified outcomes
-  - Real certs showing expertise (AWS, TensorFlow, etc)
-Bullets: 4-5 per role. Quality over quantity. Delete filler.
-Skills: Organized by category (Languages, Frameworks, Tools, Concepts). Match used tech only.
-Education: Degree | Institute | Year | CGPA (if >7.5).
-
-━━━ ATS OPTIMIZATION ━━━
-- Plain ASCII text only. No columns, tables, unicode, emojis.
-- Natural keyword integration from original resume.
-- Standard sections: Summary | Contact | Skills | Experience | Projects | Education | Certifications.
-- Single space between sections.
-
-━━━ FINAL QUALITY CHECK ━━━
-- Skimmable in 6 seconds → highlights top 3 projects/roles.
-- Reads like a builder, not a student listing tasks.
-- Every bullet earns its place (no fluff, all value).
-- Structured for recruiter and ATS scanning.
-`;
+RULES — non-negotiable:
+- Do NOT invent companies, roles, dates, degrees, scores, links, or achievements that aren't in the original.
+- Keep all factual data (names, dates, companies, college, CGPA) exactly as-is.
+- You MAY rewrite bullets, summary, and section structure for clarity, impact, and ATS keywords.
+- Use the XYZ formula in bullets: "Did X using Y, achieving Z (with metrics if available in the original; otherwise omit metrics — DO NOT fabricate numbers)."
+- Strong action verbs (Built, Shipped, Reduced, Automated, Designed, Led). No "responsible for", no "hardworking team player", no "passionate learner".
+- Plain ASCII. No emojis. No tables. No multi-column layouts. ATS-safe.
+- Tailor for Indian fresher / early-career tech roles by default.
+- Keep summary 2-3 lines, max ~50 words.
+- Categorize skills sensibly (Languages, Frameworks/Libraries, Tools, Concepts).
+- If a section has no data in the original, return an empty array — don't make stuff up.`;
 
 const rewriteFunctionDef = {
   name: "submit_rewritten_resume",
@@ -231,35 +181,6 @@ export const rewriteResume = createServerFn({ method: "POST" })
 
     const apiKey = getNextApiKey(keys);
 
-    // Build feedback context if provided
-    let feedbackContext = "";
-    if (data.useFeedback) {
-      const parts = [];
-      if (data.redFlags?.length) {
-        parts.push(`ISSUES FOUND:\n${data.redFlags.map((f) => `- ${f}`).join("\n")}`);
-      }
-      if (data.keywordsMissing?.length) {
-        parts.push(`MISSING KEYWORDS TO ADD:\n${data.keywordsMissing.slice(0, 12).join(", ")}`);
-      }
-      if (parts.length > 0) {
-        feedbackContext = `\n\n━━━ ANALYSIS FEEDBACK (USE THIS TO IMPROVE) ━━━\n${parts.join("\n\n")}`;
-      }
-    }
-
-    let personalizationContext = "";
-    if (data.personalization) {
-      const bits = [
-        data.personalization.targetRole ? `Target role: ${data.personalization.targetRole}` : "",
-        data.personalization.preferredTone ? `Preferred tone: ${data.personalization.preferredTone}` : "",
-        data.personalization.githubUsername ? `GitHub username: ${data.personalization.githubUsername}` : "",
-        data.personalization.notes ? `Notes: ${data.personalization.notes}` : "",
-      ].filter(Boolean);
-
-      if (bits.length > 0) {
-        personalizationContext = `\n\n━━━ PERSONALIZATION CONTEXT (USE TO TAILOR THE REWRITE) ━━━\n${bits.map((bit) => `- ${bit}`).join("\n")}`;
-      }
-    }
-
     try {
       const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey, {
         method: "POST",
@@ -272,7 +193,7 @@ export const rewriteResume = createServerFn({ method: "POST" })
             {
               parts: [
                 {
-                  text: `Rewrite this resume into a clean, ATS-friendly version. Keep all facts; strengthen the wording.${feedbackContext}${personalizationContext}\n\nIf personalization context is present, use it to emphasize the target role and preferred tone. Do not invent experience or skills that are not in the resume.\n\n--- RESUME START ---\n${data.resumeText}\n--- RESUME END ---`,
+                  text: `Rewrite this resume into a clean, ATS-friendly version. Keep all facts; strengthen the wording.\n\n--- RESUME START ---\n${data.resumeText}\n--- RESUME END ---`,
                 },
               ],
             },
@@ -284,8 +205,7 @@ export const rewriteResume = createServerFn({ method: "POST" })
           ],
           toolConfig: {
             functionCallingConfig: {
-              mode: "ANY",
-              allowedFunctionNames: ["submit_rewritten_resume"],
+              mode: "AUTO",
             },
           },
         }),
@@ -301,14 +221,6 @@ export const rewriteResume = createServerFn({ method: "POST" })
       }
 
       const json = await res.json();
-      
-      // Check for malformed function call
-      const finishReason = json.candidates?.[0]?.finishReason;
-      if (finishReason === 'MALFORMED_FUNCTION_CALL') {
-        console.error("Gemini generated malformed function call. Retrying...", json);
-        return { ok: false as const, error: "Rewrite format error. Try again." };
-      }
-      
       const functionCall = json.candidates?.[0]?.content?.parts?.find((p: any) => p.functionCall);
 
       if (!functionCall?.functionCall?.args) {

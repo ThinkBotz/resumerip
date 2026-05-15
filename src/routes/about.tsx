@@ -54,7 +54,7 @@ function AboutPage() {
         <p>
           Most resume tools either cost money, require a signup, or were built for
           experienced US engineers. We built ResumeRIP for the Indian fresher: brutally
-          honest, fast, mobile-first, and free forever for roast/analysis. Login only powers saved personalization.
+          honest, fast, mobile-first, and free forever — no login, no paywall, no email harvesting.
         </p>
         <h2 className="text-xl font-semibold">What you can do</h2>
         <ul className="list-disc space-y-2 pl-5">

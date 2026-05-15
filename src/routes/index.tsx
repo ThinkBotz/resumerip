@@ -162,7 +162,7 @@ function Index() {
             </section>
 
             <p className="mt-10 font-mono text-xs text-muted-foreground">
-              Free roast and ATS analysis with no login. Login only unlocks saved personalization.
+              Free. No login. Your file never leaves the request.
             </p>
           </main>
 

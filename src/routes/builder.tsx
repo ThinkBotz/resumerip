@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { Toaster, toast } from "sonner";
-import { Skull, Plus, Trash2, ArrowLeft, Sparkles, Check, X, LogIn, LogOut, Save } from "lucide-react";
+import { Skull, Plus, Trash2, ArrowLeft, Sparkles, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,11 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RewrittenResume as ResumePreview } from "@/components/RewrittenResume";
 import type { RewrittenResume } from "@/lib/rewrite.functions";
-import {
-  defaultPersonalizationProfile,
-  useFirebaseAuth,
-  usePersonalizationProfile,
-} from "@/integrations/firebase/session";
 import {
   scoreResume,
   extractKeywords,
@@ -71,15 +66,6 @@ function BuilderPage() {
   const [r, setR] = useState<RewrittenResume>(empty);
   const [jd, setJd] = useState("");
   const [template, setTemplate] = useState<TemplatePreset>("fresher");
-  const { user, loading: authLoading, error: authError, isConfigured, signInWithGoogle, signOut } = useFirebaseAuth();
-  const {
-    profile,
-    setProfile,
-    loading: profileLoading,
-    saving: profileSaving,
-    error: profileError,
-    saveProfile,
-  } = usePersonalizationProfile(user?.uid ?? null);
 
   const ats = useMemo(() => scoreResume(r, jd), [r, jd]);
 
@@ -152,51 +138,6 @@ function BuilderPage() {
       skills: { ...p.skills, concepts: [...p.skills.concepts, ...missing] },
     }));
     toast.success(`Added ${missing.length} JD keyword${missing.length > 1 ? "s" : ""} to Concepts. Edit as needed.`);
-  };
-
-  const applyPersonalizationToResume = () => {
-    if (!user) {
-      toast.error("Log in first to apply personalization.");
-      return;
-    }
-
-    const nextProfile = profile ?? defaultPersonalizationProfile;
-    const updates: string[] = [];
-
-    if (!r.headline.trim() && nextProfile.targetRole.trim()) {
-      update("headline", nextProfile.targetRole.trim());
-      updates.push("headline");
-    }
-
-    if (!r.contact.github.trim() && nextProfile.githubUsername.trim()) {
-      const githubUrl = nextProfile.githubUsername.trim().startsWith("http")
-        ? nextProfile.githubUsername.trim()
-        : `https://github.com/${nextProfile.githubUsername.trim()}`;
-      updateContact("github", githubUrl);
-      updates.push("GitHub link");
-    }
-
-    if (updates.length === 0) {
-      toast.info("Add a target role or GitHub username in personalization first.");
-      return;
-    }
-
-    toast.success(`Applied ${updates.join(" and ")} to empty resume fields.`);
-  };
-
-  const handleSavePersonalization = async () => {
-    if (!user) {
-      toast.error("Log in first to save personalization.");
-      return;
-    }
-
-    try {
-      await saveProfile(profile);
-      toast.success("Personalization saved to Firebase.");
-    } catch (error) {
-      console.error(error);
-      toast.error(error instanceof Error ? error.message : "Could not save personalization.");
-    }
   };
 
   return (
@@ -323,100 +264,6 @@ function BuilderPage() {
                 placeholder="Paste the job description. We'll score JD keyword coverage and let you auto-add missing ones."
                 rows={4}
               />
-            </Section>
-
-            <Section
-              title="Personalization (login required)"
-              action={
-                user ? (
-                  <Button size="sm" variant="outline" onClick={() => void signOut()}>
-                    <LogOut className="mr-1 size-3" /> Log out
-                  </Button>
-                ) : (
-                  <Button size="sm" variant="outline" onClick={() => void signInWithGoogle()} disabled={!isConfigured || authLoading}>
-                    <LogIn className="mr-1 size-3" /> Sign in with Google
-                  </Button>
-                )
-              }
-            >
-              {!isConfigured && (
-                <p className="rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
-                  Firebase env vars are missing. Add the <span className="font-semibold">VITE_FIREBASE_*</span> settings to enable login and saved personalization.
-                </p>
-              )}
-
-              {authError && (
-                <p className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
-                  {authError}
-                </p>
-              )}
-
-              {profileError && (
-                <p className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
-                  {profileError}
-                </p>
-              )}
-
-              {user ? (
-                <div className="space-y-4">
-                  <div className="rounded-md border border-border bg-card/40 p-3 text-xs text-muted-foreground">
-                    <p className="font-semibold text-foreground">Signed in as {user.email ?? user.displayName ?? "Firebase user"}</p>
-                    <p>Saved profile data will be reused by the rewrite flow and can be applied to empty resume fields.</p>
-                    {profileLoading && <p className="mt-1">Loading saved personalization...</p>}
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <Field label="Target role">
-                      <Input
-                        value={profile.targetRole}
-                        onChange={(e) => setProfile((prev) => ({ ...prev, targetRole: e.target.value }))}
-                        placeholder="Frontend intern, ML engineer, data analyst"
-                      />
-                    </Field>
-                    <Field label="Preferred tone">
-                      <Input
-                        value={profile.preferredTone}
-                        onChange={(e) => setProfile((prev) => ({ ...prev, preferredTone: e.target.value }))}
-                        placeholder="Professional, bold, concise"
-                      />
-                    </Field>
-                    <Field label="GitHub username">
-                      <Input
-                        value={profile.githubUsername}
-                        onChange={(e) => setProfile((prev) => ({ ...prev, githubUsername: e.target.value }))}
-                        placeholder="your-github-handle"
-                      />
-                    </Field>
-                    <Field label="Rewrite notes">
-                      <Input
-                        value={profile.notes}
-                        onChange={(e) => setProfile((prev) => ({ ...prev, notes: e.target.value }))}
-                        placeholder="Emphasize React, avoid fluff, keep it crisp"
-                      />
-                    </Field>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <Button type="button" variant="outline" onClick={applyPersonalizationToResume}>
-                      Apply to empty fields
-                    </Button>
-                    <Button type="button" onClick={() => void handleSavePersonalization()} disabled={profileSaving || profileLoading}>
-                      <Save className="mr-2 size-3" />
-                      {profileSaving ? "Saving..." : "Save personalization"}
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3 text-sm text-muted-foreground">
-                  <p>
-                    Login unlocks saved personalization. Roast and analysis still work with no login.
-                  </p>
-                  <Button type="button" onClick={() => void signInWithGoogle()} disabled={!isConfigured || authLoading}>
-                    <LogIn className="mr-2 size-3" />
-                    {authLoading ? "Connecting..." : "Sign in with Google"}
-                  </Button>
-                </div>
-              )}
             </Section>
 
             <Section title="Basics">

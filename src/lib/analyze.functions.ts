@@ -211,8 +211,7 @@ export const analyzeResume = createServerFn({ method: "POST" })
           ],
           toolConfig: {
             functionCallingConfig: {
-              mode: "ANY",
-              allowedFunctionNames: ["submit_resume_analysis"],
+              mode: "AUTO",
             },
           },
         }),
@@ -228,14 +227,6 @@ export const analyzeResume = createServerFn({ method: "POST" })
       }
 
       const json = await res.json();
-      
-      // Check for malformed function call
-      const finishReason = json.candidates?.[0]?.finishReason;
-      if (finishReason === 'MALFORMED_FUNCTION_CALL') {
-        console.error("Gemini generated malformed function call. Retrying...", json);
-        return { ok: false as const, error: "Analysis format error. Try again." };
-      }
-      
       const functionCall = json.candidates?.[0]?.content?.parts?.find((p: any) => p.functionCall);
 
       if (!functionCall?.functionCall?.args) {

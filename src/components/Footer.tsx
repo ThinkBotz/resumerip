@@ -54,7 +54,7 @@ export function Footer() {
       <div className="border-t border-border/60">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-2 px-4 py-5 text-xs text-muted-foreground sm:flex-row">
           <p>© {new Date().getFullYear()} ResumeRIP. Free forever for students.</p>
-          <p>Made in India · No login for roast · Login unlocks personalization.</p>
+          <p>Made in India · No login · Your file never leaves the request.</p>
         </div>
       </div>
     </footer>
