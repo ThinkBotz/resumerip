@@ -182,7 +182,10 @@ export const analyzeResume = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const keys = getApiKeys();
     if (keys.length === 0) {
-      return { ok: false as const, error: "Gemini API key not configured. Set GOOGLE_GENERATIVE_AI_API_KEY." };
+      return {
+        ok: false as const,
+        error: "Gemini API key not configured. Set GOOGLE_GENERATIVE_AI_API_KEYS (comma-separated) or GOOGLE_GENERATIVE_AI_API_KEY.",
+      };
     }
 
     const apiKey = getNextApiKey(keys);
