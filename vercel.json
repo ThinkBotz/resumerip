@@ -1,7 +1,4 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
   "env": {
     "GOOGLE_GENERATIVE_AI_API_KEYS": ""
   }
